@@ -50,7 +50,7 @@ export function getEcho(): EchoInstance {
     wssPort: Number(import.meta.env.VITE_REVERB_PORT ?? 8080),
     forceTLS: import.meta.env.VITE_REVERB_SCHEME === "https",
     enabledTransports: ["ws", "wss"],
-    authEndpoint: `${apiBaseUrl}/broadcasting/auth`,
+    authEndpoint: `${apiBaseUrl.replace("/api", "")}/broadcasting/auth`,
     auth: {
       headers: {
         Authorization: `Bearer ${localStorage.getItem("auth_token") ?? ""}`,

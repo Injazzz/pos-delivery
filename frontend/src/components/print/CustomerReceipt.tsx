@@ -57,6 +57,11 @@ export const CustomerReceipt = forwardRef<
   HTMLDivElement,
   { data: ReceiptData }
 >(function CustomerReceipt({ data }, ref) {
+  // Guard against undefined data
+  if (!data?.order) {
+    return <div className="p-4 text-red-600">Error: Data tidak tersedia</div>;
+  }
+
   const date = new Date(data.order.created_at).toLocaleString("id-ID", {
     day: "2-digit",
     month: "2-digit",

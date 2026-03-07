@@ -10,6 +10,8 @@ use App\Http\Controllers\Api\Courier;
 use App\Http\Controllers\Api\Shared;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Broadcast;
+use Illuminate\Support\Facades\Log;
+use App\Enums\UserRole;
 
 // =====================
 // PUBLIC ROUTES
@@ -45,8 +47,6 @@ Route::middleware('auth:sanctum')->group(function () {
             'token_abilities' => $request->user()?->currentAccessToken()?->abilities,
         ]);
     });
-
-    Route::post('/broadcasting/auth', function (Request $request) {return Broadcast::auth($request);});
 
     // Profile
     Route::prefix('profile')->group(function () {

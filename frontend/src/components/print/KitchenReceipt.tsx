@@ -20,6 +20,11 @@ interface KitchenReceiptProps {
 
 export const KitchenReceipt = forwardRef<HTMLDivElement, KitchenReceiptProps>(
   function KitchenReceipt({ data }, ref) {
+    // Guard against undefined data
+    if (!data?.order) {
+      return <div className="p-4 text-red-600">Error: Data tidak tersedia</div>;
+    }
+
     const time = new Date(data.order.created_at).toLocaleTimeString("id-ID", {
       hour: "2-digit",
       minute: "2-digit",
