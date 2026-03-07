@@ -39,6 +39,9 @@ export function getEcho(): EchoInstance {
 
   window.Pusher = Pusher;
 
+  const apiBaseUrl =
+    import.meta.env.VITE_API_URL || "http://localhost:8000/api";
+
   const echo = new Echo<"reverb">({
     broadcaster: "reverb",
     key: import.meta.env.VITE_REVERB_APP_KEY,
@@ -47,7 +50,7 @@ export function getEcho(): EchoInstance {
     wssPort: Number(import.meta.env.VITE_REVERB_PORT ?? 8080),
     forceTLS: import.meta.env.VITE_REVERB_SCHEME === "https",
     enabledTransports: ["ws", "wss"],
-    authEndpoint: "/api/broadcasting/auth",
+    authEndpoint: `${apiBaseUrl}/broadcasting/auth`,
     auth: {
       headers: {
         Authorization: `Bearer ${localStorage.getItem("auth_token") ?? ""}`,

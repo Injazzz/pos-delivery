@@ -10,7 +10,8 @@ use Illuminate\Support\Facades\Broadcast;
 |--------------------------------------------------------------------------
 */
 Broadcast::channel('manager', function (User $user) {
-    return $user->role === UserRole::Manager;
+    $userRole = $user->role instanceof UserRole ? $user->role->value : $user->role;
+    return $userRole === UserRole::Manager->value;
 });
 
 /*
@@ -19,7 +20,8 @@ Broadcast::channel('manager', function (User $user) {
 |--------------------------------------------------------------------------
 */
 Broadcast::channel('cashier', function (User $user) {
-    return in_array($user->role, [UserRole::Kasir, UserRole::Manager]);
+    $userRole = $user->role instanceof UserRole ? $user->role->value : $user->role;
+    return in_array($userRole, [UserRole::Kasir->value, UserRole::Manager->value]);
 });
 
 /*
@@ -28,7 +30,8 @@ Broadcast::channel('cashier', function (User $user) {
 |--------------------------------------------------------------------------
 */
 Broadcast::channel('courier.{courierId}', function (User $user, int $courierId) {
-    return (int) $user->id === $courierId && $user->role === UserRole::Kurir;
+    $userRole = $user->role instanceof UserRole ? $user->role->value : $user->role;
+    return (int) $user->id === $courierId && $userRole === UserRole::Kurir->value;
 });
 
 /*
@@ -37,7 +40,8 @@ Broadcast::channel('courier.{courierId}', function (User $user, int $courierId) 
 |--------------------------------------------------------------------------
 */
 Broadcast::channel('customer.{userId}', function (User $user, int $userId) {
-    return (int) $user->id === $userId && $user->role === UserRole::Pelanggan;
+    $userRole = $user->role instanceof UserRole ? $user->role->value : $user->role;
+    return (int) $user->id === $userId && $userRole === UserRole::Pelanggan->value;
 });
 
 /*
@@ -46,11 +50,12 @@ Broadcast::channel('customer.{userId}', function (User $user, int $userId) {
 |--------------------------------------------------------------------------
 */
 Broadcast::channel('order.{orderId}', function (User $user, int $orderId) {
-    if (in_array($user->role, [UserRole::Manager, UserRole::Kasir])) {
+    $userRole = $user->role instanceof UserRole ? $user->role->value : $user->role;
+    if (in_array($userRole, [UserRole::Manager->value, UserRole::Kasir->value])) {
         return true;
     }
 
-    if ($user->role === UserRole::Pelanggan && $user->customer) {
+    if ($userRole === UserRole::Pelanggan->value && $user->customer) {
         return \App\Models\Order::where('id', $orderId)
             ->where('customer_id', $user->customer->id)
             ->exists();

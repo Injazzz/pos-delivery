@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import axios from "axios";
 
 const apiClient = axios.create({
@@ -36,15 +37,26 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
   (response) => response,
   async (error) => {
-    // ✅ Handle CSRF token expired
+    // ✅ Handle CSRF token expired (dengan max retry untuk prevent infinite loop)
     if (error.response?.status === 419) {
-      // Token CSRF expired, coba refresh cookie lalu ulangi request
-      try {
-        await apiClient.get("/sanctum/csrf-cookie");
-        // Ulangi request original
-        return apiClient(error.config);
-      } catch (refreshError) {
-        console.error("Failed to refresh CSRF token", refreshError);
+      const retryCount = (error.config as any)._retryCount || 0;
+
+      // Prevent infinite loop: max 2 retries untuk CSRF
+      if (retryCount < 2) {
+        try {
+          // Call Sanctum's CSRF endpoint at root level (not under /api)
+          await axios.get(`${window.location.origin}/sanctum/csrf-cookie`, {
+            withCredentials: true,
+          });
+
+          // Mark retry count untuk prevent infinite loop
+          (error.config as any)._retryCount = retryCount + 1;
+
+          // Ulangi request original
+          return apiClient(error.config);
+        } catch (refreshError) {
+          console.error("Failed to refresh CSRF token", refreshError);
+        }
       }
     }
 

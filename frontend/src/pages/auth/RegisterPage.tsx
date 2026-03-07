@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -23,7 +23,6 @@ import {
 import { authApi } from "@/api/auth";
 import { useAuthStore } from "@/stores/authStore";
 import type { ApiError } from "@/types/auth";
-import apiClient from "@/lib/axios";
 
 const registerSchema = z
   .object({
@@ -48,19 +47,6 @@ export default function RegisterPage() {
   const navigate = useNavigate();
   const { setAuth } = useAuthStore();
   const [isLoading, setIsLoading] = useState(false);
-
-  useEffect(() => {
-    const getCsrfCookie = async () => {
-      try {
-        await apiClient.get("/sanctum/csrf-cookie");
-        console.log("CSRF cookie set");
-      } catch (error) {
-        console.error("Failed to get CSRF cookie", error);
-      }
-    };
-
-    getCsrfCookie();
-  }, []);
 
   const {
     register,

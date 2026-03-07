@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -23,7 +23,6 @@ import {
 import { authApi } from "@/api/auth";
 import { useAuthStore } from "@/stores/authStore";
 import type { ApiError } from "@/types/auth";
-import apiClient from "@/lib/axios";
 
 const loginSchema = z.object({
   email: z.string().email("Format email tidak valid"),
@@ -37,19 +36,6 @@ export default function LoginPage() {
   const location = useLocation();
   const { setAuth } = useAuthStore();
   const [isLoading, setIsLoading] = useState(false);
-
-  useEffect(() => {
-    const getCsrfCookie = async () => {
-      try {
-        await apiClient.get("/sanctum/csrf-cookie");
-        console.log("CSRF cookie set");
-      } catch (error) {
-        console.error("Failed to get CSRF cookie", error);
-      }
-    };
-
-    getCsrfCookie();
-  }, []);
 
   const from = (location.state as any)?.from?.pathname || null;
 

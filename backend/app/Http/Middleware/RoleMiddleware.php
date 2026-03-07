@@ -15,12 +15,21 @@ class RoleMiddleware
      */
     public function handle(Request $request, Closure $next, string ...$roles): Response
     {
-        if (!$request->user()) {
+        $user = $request->user();
+
+        if (!$user) {
             return response()->json(['message' => 'Unauthenticated.'], 401);
         }
 
-        if (!in_array($request->user()->role, $roles)) {
-            return response()->json(['message' => 'Unauthorized. Insufficient role.'], 403);
+        // Extract the enum value (UserRole enum returns value via ->value property)
+        $userRoleValue = $user->role->value ?? $user->role;
+
+        if (!in_array($userRoleValue, $roles)) {
+            return response()->json([
+                'message' => 'Unauthorized. Insufficient role.',
+                'user_role' => $userRoleValue,
+                'required_roles' => $roles,
+            ], 403);
         }
 
         return $next($request);

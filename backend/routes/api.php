@@ -21,12 +21,6 @@ Route::prefix('auth')->group(function () {
     Route::post('reset-password', [AuthController::class, 'resetPassword']);
 });
 
-Route::get('/sanctum/csrf-cookie', function (Request $request) {
-    return response()->json(['message' => 'CSRF cookie set'])->withCookie(
-        cookie('XSRF-TOKEN', csrf_token(), 60, null, null, false, false)
-    );
-});
-
 // Menu public (untuk display tanpa login)
 Route::get('menus', [Shared\MenuController::class, 'index']);
 Route::get('menus/{menu}', [Shared\MenuController::class, 'show']);
@@ -38,6 +32,20 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::post('auth/logout', [AuthController::class, 'logout']);
     Route::get('auth/me', [AuthController::class, 'me']);
+
+    // DEBUG ENDPOINT
+    Route::get('debug/user', function (Request $request) {
+        $user = $request->user();
+        return response()->json([
+            'authenticated' => true,
+            'user_id' => $user?->id,
+            'email' => $user?->email,
+            'role' => $user?->role,
+            'status' => $user?->status,
+            'token_abilities' => $request->user()?->currentAccessToken()?->abilities,
+        ]);
+    });
+
     Route::post('/broadcasting/auth', function (Request $request) {return Broadcast::auth($request);});
 
     // Profile

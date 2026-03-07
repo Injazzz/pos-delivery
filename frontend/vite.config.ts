@@ -46,7 +46,6 @@ export default defineConfig({
         clientsClaim: true,
         runtimeCaching: [
           {
-            // ✅ PERBAIKAN: Gunakan string regex, bukan RegExp object
             urlPattern: /^https:\/\/localhost:8000\/api\/.*/i,
             handler: "NetworkFirst",
             options: {
@@ -59,7 +58,6 @@ export default defineConfig({
             },
           },
           {
-            // ✅ PERBAIKAN: Cache untuk gambar
             urlPattern: /^https:\/\/localhost:8000\/storage\/.*/i,
             handler: "CacheFirst",
             options: {
@@ -74,7 +72,7 @@ export default defineConfig({
       },
 
       devOptions: {
-        enabled: false, // ✅ Matikan PWA di development
+        enabled: false,
         navigateFallback: "index.html",
         suppressWarnings: true,
         type: "module",

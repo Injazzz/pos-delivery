@@ -28,7 +28,7 @@ class ReportController extends Controller
             ->get();
 
         $payments = Payment::whereBetween('created_at', [$from, $to])
-            ->where('payment_status', 'paid')
+            ->where('status', 'paid')
             ->get();
 
         // Previous period untuk growth calculation
@@ -37,7 +37,7 @@ class ReportController extends Controller
         $prevTo   = $from->copy()->subSecond();
 
         $prevRevenue = Payment::whereBetween('created_at', [$prevFrom, $prevTo])
-            ->where('payment_status', 'paid')
+            ->where('status', 'paid')
             ->sum('amount');
 
         $revenue      = $payments->sum('amount');
@@ -83,7 +83,7 @@ class ReportController extends Controller
         };
 
         $rows = Payment::whereBetween('created_at', [$from, $to])
-            ->where('payment_status', 'paid')
+            ->where('status', 'paid')
             ->select([
                 DB::raw("DATE_FORMAT(created_at, '{$format}') as period"),
                 DB::raw('SUM(amount) as revenue'),
@@ -115,7 +115,7 @@ class ReportController extends Controller
             )
             ->select([
                 'menu_id',
-                DB::raw('SUM(quantity) as total_qty'),
+                DB::raw('SUM(qty) as total_qty'),
                 DB::raw('SUM(subtotal) as total_revenue'),
                 DB::raw('COUNT(DISTINCT order_id) as order_count'),
             ])
@@ -153,7 +153,7 @@ class ReportController extends Controller
             ->join('menus', 'order_items.menu_id', '=', 'menus.id')
             ->select([
                 'menus.category',
-                DB::raw('SUM(order_items.quantity) as total_qty'),
+                DB::raw('SUM(order_items.qty) as total_qty'),
                 DB::raw('SUM(order_items.subtotal) as total_revenue'),
             ])
             ->groupBy('menus.category')
@@ -184,13 +184,13 @@ class ReportController extends Controller
         [$from, $to] = $this->parseDateRange($request);
 
         $rows = Payment::whereBetween('created_at', [$from, $to])
-            ->where('payment_status', 'paid')
+            ->where('status', 'paid')
             ->select([
-                'payment_method',
+                'method',
                 DB::raw('COUNT(*) as count'),
                 DB::raw('SUM(amount) as total'),
             ])
-            ->groupBy('payment_method')
+            ->groupBy('method')
             ->get();
 
         $labels = [
@@ -202,8 +202,8 @@ class ReportController extends Controller
         ];
 
         $data = $rows->map(fn($r) => [
-            'method'  => $r->payment_method,
-            'label'   => $labels[$r->payment_method] ?? $r->payment_method,
+            'method'  => $r->method,
+            'label'   => $labels[$r->method] ?? $r->method,
             'count'   => (int) $r->count,
             'total'   => (float) $r->total,
         ]);
@@ -248,7 +248,7 @@ class ReportController extends Controller
                 'total'        => (float) $o->total,
                 'customer'     => $o->customer?->user->name ?? 'Walk-in',
                 'cashier'      => $o->cashier?->name ?? '-',
-                'payment_method' => $o->payment?->payment_method ?? '-',
+                'payment_method' => $o->payment?->method ?? '-',
                 'created_at'   => $o->created_at->toISOString(),
             ]);
 
@@ -287,7 +287,7 @@ class ReportController extends Controller
             $o->subtotal,
             $o->discount_amount ?? 0,
             $o->total,
-            $o->payment?->payment_method ?? '-',
+            $o->payment?->method ?? '-',
             $o->payment?->amount_paid ?? 0,
             $o->payment?->change_amount ?? 0,
         ]);

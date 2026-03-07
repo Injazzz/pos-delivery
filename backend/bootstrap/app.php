@@ -17,7 +17,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'role' => \App\Http\Middleware\RoleMiddleware::class,
         ]);
-        $middleware->statefulApi();
+        // Removed statefulApi() - not needed for token-based auth (Sanctum) in SPA
     })
     ->withBroadcasting(
         __DIR__.'/../routes/channels.php',
