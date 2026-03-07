@@ -6,6 +6,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { OrderStatusBadge } from "@/components/shared/OrderStatusBadge";
 import { ordersApi } from "@/api/orders";
+import { LiveBadge } from "@/components/shared/LiveBagde";
+import { RealtimeOrderFeed } from "@/components/shared/RealtimeOrderFeed";
 
 export default function CashierDashboard() {
   const navigate = useNavigate();
@@ -56,6 +58,7 @@ export default function CashierDashboard() {
             Monitor pesanan masuk secara real-time
           </p>
         </div>
+        <LiveBadge />
         <Button
           onClick={() => navigate("/cashier/new-order")}
           className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-semibold gap-2"
@@ -84,6 +87,8 @@ export default function CashierDashboard() {
           </Card>
         ))}
       </div>
+
+      <RealtimeOrderFeed />
 
       {/* Recent orders */}
       <div>

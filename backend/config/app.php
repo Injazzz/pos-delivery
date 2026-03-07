@@ -122,5 +122,8 @@ return [
         'driver' => env('APP_MAINTENANCE_DRIVER', 'file'),
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
+    'store_address' => env('APP_STORE_ADDRESS', 'Jl. Contoh No. 1'),
+    'store_phone'   => env('APP_STORE_PHONE', '08123456789'),
+    'frontend_url'  => env('APP_FRONTEND_URL', 'http://localhost:5173'),
 
 ];

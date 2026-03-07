@@ -9,6 +9,7 @@ import { OrderStatusChart } from "./components/OrderStatusChart";
 import { TopMenusCard } from "./components/TopMenusCard";
 import { RecentOrdersTable } from "./components/RecentOrdersTable";
 import { ActivityFeed } from "./components/ActivityFeed";
+import { ConnectionStatus, LiveBadge } from "@/components/shared/LiveBagde";
 
 export default function ManagerDashboard() {
   const qc = useQueryClient();
@@ -37,7 +38,9 @@ export default function ManagerDashboard() {
         <div>
           <h1 className="text-2xl font-bold text-white">Dashboard</h1>
           <p className="text-slate-400 text-sm mt-1 capitalize">{now}</p>
+          <ConnectionStatus className="mt-1" />
         </div>
+        <LiveBadge />
         <Button
           variant="outline"
           size="sm"

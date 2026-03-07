@@ -4,6 +4,7 @@ namespace App\Notifications;
 use App\Models\Order;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Notifications\Messages\BroadcastMessage;
 use Illuminate\Notifications\Notification;
 
 class OrderStatusNotification extends Notification implements ShouldQueue
@@ -17,10 +18,10 @@ class OrderStatusNotification extends Notification implements ShouldQueue
 
     public function via(object $notifiable): array
     {
-        return ['database'];
+        return ['database', 'broadcast'];
     }
 
-    public function toDatabase(object $notifiable): array
+    public function toDatabase(object $notifiable): BroadcastMessage
     {
         $messages = [
             'processing' => 'Pesanan Anda sedang diproses oleh kasir.',
@@ -31,12 +32,12 @@ class OrderStatusNotification extends Notification implements ShouldQueue
             'cancelled'  => 'Pesanan Anda telah dibatalkan.',
         ];
 
-        return [
+        return new BroadcastMessage([
             'title'      => 'Update Pesanan #' . $this->order->order_code,
             'message'    => $messages[$this->newStatus] ?? "Status pesanan diubah ke {$this->newStatus}.",
             'order_id'   => $this->order->id,
             'order_code' => $this->order->order_code,
             'new_status' => $this->newStatus,
-        ];
+        ]);
     }
 }

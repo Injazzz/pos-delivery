@@ -24,31 +24,33 @@ class OrderStatusUpdated implements ShouldBroadcast
         $channels = [
             new PrivateChannel('cashier'),
             new PrivateChannel('manager'),
+            new PrivateChannel("order.{$this->order->id}"),
         ];
 
-        // Notif ke customer jika ada
-        if ($this->order->customer) {
-            $channels[] = new PrivateChannel("customer.{$this->order->customer->user_id}");
-        }
-
-        // Notif ke kurir jika ada delivery
-        if ($this->order->delivery?->courier_id) {
-            $channels[] = new PrivateChannel("courier.{$this->order->delivery->courier_id}");
+        if ($this->order->customer?->user_id) {
+            $channels[] = new PrivateChannel(
+                "customer.{$this->order->customer->user_id}"
+            );
         }
 
         return $channels;
     }
 
-    public function broadcastAs(): string { return 'order.status.updated'; }
+    public function broadcastAs(): string
+    {
+        return 'order.status.updated';
+    }
 
     public function broadcastWith(): array
     {
         return [
-            'order_id'   => $this->order->id,
-            'order_code' => $this->order->order_code,
-            'old_status' => $this->oldStatus,
-            'new_status' => $this->newStatus,
-            'new_status_label' => $this->order->status->label(),
+            'id'           => $this->order->id,
+            'order_code'   => $this->order->order_code,
+            'old_status'   => $this->oldStatus,
+            'new_status'   => $this->newStatus,
+            'status_label' => $this->order->status->label(),
+            'total'        => $this->order->formatted_total,
+            'customer'     => $this->order->customer?->user->name ?? 'Walk-in',
         ];
     }
 }

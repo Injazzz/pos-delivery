@@ -8,6 +8,8 @@ use App\Http\Controllers\Api\Cashier;
 use App\Http\Controllers\Api\Customer;
 use App\Http\Controllers\Api\Courier;
 use App\Http\Controllers\Api\Shared;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Broadcast;
 
 // =====================
 // PUBLIC ROUTES
@@ -17,6 +19,12 @@ Route::prefix('auth')->group(function () {
     Route::post('register', [AuthController::class, 'register']);
     Route::post('forgot-password', [AuthController::class, 'forgotPassword']);
     Route::post('reset-password', [AuthController::class, 'resetPassword']);
+});
+
+Route::get('/sanctum/csrf-cookie', function (Request $request) {
+    return response()->json(['message' => 'CSRF cookie set'])->withCookie(
+        cookie('XSRF-TOKEN', csrf_token(), 60, null, null, false, false)
+    );
 });
 
 // Menu public (untuk display tanpa login)
@@ -30,6 +38,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::post('auth/logout', [AuthController::class, 'logout']);
     Route::get('auth/me', [AuthController::class, 'me']);
+    Route::post('/broadcasting/auth', function (Request $request) {return Broadcast::auth($request);});
 
     // Profile
     Route::prefix('profile')->group(function () {
@@ -64,10 +73,24 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('menus/{menu}/images/{media}', [Manager\MenuController::class, 'deleteImage']);
         Route::get('orders', [Manager\OrderController::class, 'index']);
         Route::patch('orders/{order}/status', [Manager\OrderController::class, 'updateStatus']);
-        Route::get('reports/sales', [Manager\ReportController::class, 'sales']);
-        Route::get('reports/orders', [Manager\ReportController::class, 'orders']);
-        Route::get('activity-logs', [Manager\ActivityLogController::class, 'index']);
-        Route::post('deliveries/{delivery}/assign', [Manager\DeliveryController::class, 'assignCourier']);
+        Route::get('orders/{order}/receipt', [Manager\ReportController::class, 'receipt']);
+        Route::get('deliveries',                          [Manager\DeliveryController::class, 'index']);
+        Route::post('deliveries/{delivery}/assign',       [Manager\DeliveryController::class, 'assignCourier']);
+        Route::get('couriers/available',                  [Manager\DeliveryController::class, 'availableCouriers']);
+        Route::prefix('reports')->group(function () {
+            Route::get('summary',          [Manager\ReportController::class, 'summary']);
+            Route::get('revenue-chart',    [Manager\ReportController::class, 'revenueChart']);
+            Route::get('top-menus',        [Manager\ReportController::class, 'topMenus']);
+            Route::get('categories',       [Manager\ReportController::class, 'categories']);
+            Route::get('payment-methods',  [Manager\ReportController::class, 'paymentMethods']);
+            Route::get('orders',           [Manager\ReportController::class, 'orders']);
+            Route::get('export/excel',     [Manager\ReportController::class, 'exportExcel']);
+            Route::get('export/pdf-data',  [Manager\ReportController::class, 'exportPdfData']);
+        });
+        Route::prefix('activity-logs')->group(function () {
+            Route::get('/',        [Manager\ActivityLogController::class, 'index']);
+            Route::get('/summary', [Manager\ActivityLogController::class, 'summary']);
+        });
     });
 
     // ── CASHIER ───────────────────────────────────
@@ -76,8 +99,12 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('orders', [Cashier\OrderController::class, 'store']);
         Route::patch('orders/{order}/status', [Cashier\OrderController::class, 'updateStatus']);
         Route::get('orders/{order}/receipt', [Cashier\OrderController::class, 'receipt']);
-        Route::post('payments', [Cashier\PaymentController::class, 'store']);
+        Route::post('payments/cash',        [Cashier\PaymentController::class, 'cash']);
+        Route::post('payments/downpayment', [Cashier\PaymentController::class, 'downpayment']);
+        Route::post('payments/remaining',   [Cashier\PaymentController::class, 'remaining']);
+        Route::get('orders/{order}/receipt',[Cashier\PaymentController::class, 'receipt']);
         Route::get('menus', [Shared\MenuController::class, 'index']);
+        Route::get('orders/{order}/receipt', [Manager\ReportController::class, 'receipt']);
     });
 
     // ── CUSTOMER ──────────────────────────────────
@@ -94,9 +121,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // ── COURIER ───────────────────────────────────
     Route::middleware('role:kurir,manager')->prefix('courier')->group(function () {
-        Route::get('deliveries', [Courier\DeliveryController::class, 'index']);
-        Route::patch('deliveries/{delivery}/status', [Courier\DeliveryController::class, 'updateStatus']);
-        Route::post('deliveries/{delivery}/proof', [Courier\DeliveryController::class, 'uploadProof']);
+        Route::get('deliveries',                          [Courier\DeliveryController::class, 'index']);
+        Route::patch('deliveries/{delivery}/status',      [Courier\DeliveryController::class, 'updateStatus']);
+        Route::post('deliveries/{delivery}/proof',        [Courier\DeliveryController::class, 'uploadProof']);
     });
 });
 

@@ -2,8 +2,15 @@ import { Outlet } from "react-router-dom";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { AppSidebar } from "./AppSidebar";
 import { AppNavbar } from "./Navbar";
+import { useOrderEcho } from "@/hooks/useOrderEcho";
+import { useDeliveryEcho } from "@/hooks/useDeliveryEcho";
+import { useNotificationEcho } from "@/hooks/useNotificationEcho";
 
 export default function AppShell() {
+  useOrderEcho();
+  useDeliveryEcho();
+  useNotificationEcho();
+
   return (
     <SidebarProvider>
       <div className="flex min-h-screen w-full bg-slate-950">

@@ -47,6 +47,7 @@ export interface Order {
     status: string;
     amount: number;
     amount_paid: number;
+    amount_remaining: number;
     paid_at: string | null;
   };
   delivery?: {

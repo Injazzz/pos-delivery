@@ -17,10 +17,19 @@ class OrderCreated implements ShouldBroadcast
 
     public function broadcastOn(): array
     {
-        return [
-            new PrivateChannel('cashier'),         // kasir
-            new PrivateChannel('manager'),          // manager
+        $channels = [
+            new PrivateChannel('cashier'),
+            new PrivateChannel('manager'),
         ];
+
+        // Notif ke customer jika order dari customer
+        if ($this->order->customer?->user_id) {
+            $channels[] = new PrivateChannel(
+                "customer.{$this->order->customer->user_id}"
+            );
+        }
+
+        return $channels;
     }
 
     public function broadcastAs(): string
@@ -31,12 +40,16 @@ class OrderCreated implements ShouldBroadcast
     public function broadcastWith(): array
     {
         return [
-            'order_id'   => $this->order->id,
-            'order_code' => $this->order->order_code,
-            'order_type' => $this->order->order_type->value,
-            'total'      => $this->order->formatted_total,
-            'items_count' => $this->order->items->count(),
-            'created_at' => $this->order->created_at->toISOString(),
+            'id'           => $this->order->id,
+            'order_code'   => $this->order->order_code,
+            'type'         => $this->order->type->value,
+            'status'       => $this->order->status->value,
+            'status_label' => $this->order->status->label(),
+            'total'        => $this->order->formatted_total,
+            'items_count'  => $this->order->items()->count(),
+            'customer'     => $this->order->customer?->user->name ?? 'Walk-in',
+            'table_number' => $this->order->table_number,
+            'created_at'   => $this->order->created_at->toISOString(),
         ];
     }
 }

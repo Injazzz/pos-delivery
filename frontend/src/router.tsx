@@ -14,12 +14,15 @@ import ManagerDashboard from "@/pages/manager/dashboard";
 import ManagerUsers from "@/pages/manager/users";
 import ManagerMenus from "@/pages/manager/menus";
 import ManagerOrders from "@/pages/manager/orders";
-import ManagerReports from "@/pages/manager/ReportsPage";
+import ManagerDeliveries from "@/pages/manager/deliveries";
+import ManagerReceipts from "@/pages/manager/receipts";
+import ManagerReports from "@/pages/manager/reports";
+import ActivityLogsPage from "@/pages/manager/activity-logs";
 
 // Cashier pages
 import CashierDashboard from "@/pages/cashier/dashboard";
 import CashierNewOrder from "@/pages/cashier/new-order";
-import CashierPayment from "@/pages/cashier/PaymentPage";
+import CashierPayment from "@/pages/cashier/payment";
 
 // Customer pages
 import CustomerMenu from "@/pages/customer/MenuPage";
@@ -27,7 +30,8 @@ import CustomerCart from "@/pages/customer/CartPage";
 import CustomerOrders from "@/pages/customer/orders";
 
 // Courier pages
-import CourierDelivery from "@/pages/courier/DeliveryPage";
+import CourierDashboard from "@/pages/courier/dashboard";
+import CourierDeliveryDetail from "@/pages/courier/delivery";
 
 // Guard components (defined below)
 import {
@@ -129,6 +133,30 @@ export const router = createBrowserRouter([
         ),
       },
       {
+        path: "manager/deliveries",
+        element: (
+          <RequireRole roles={["manager"]}>
+            <ManagerDeliveries />
+          </RequireRole>
+        ),
+      },
+      {
+        path: "manager/receipts",
+        element: (
+          <RequireRole roles={["manager"]}>
+            <ManagerReceipts />
+          </RequireRole>
+        ),
+      },
+      {
+        path: "manager/activity-logs",
+        element: (
+          <RequireRole roles={["manager"]}>
+            <ActivityLogsPage />
+          </RequireRole>
+        ),
+      },
+      {
         path: "manager/reports",
         element: (
           <RequireRole roles={["manager"]}>
@@ -191,10 +219,18 @@ export const router = createBrowserRouter([
 
       // ── Kurir ─────────────────────────────────
       {
-        path: "courier/deliveries",
+        path: "courier/dashboard",
         element: (
           <RequireRole roles={["kurir", "manager"]}>
-            <CourierDelivery />
+            <CourierDashboard />
+          </RequireRole>
+        ),
+      },
+      {
+        path: "courier/delivery/:deliveryId",
+        element: (
+          <RequireRole roles={["kurir", "manager"]}>
+            <CourierDeliveryDetail />
           </RequireRole>
         ),
       },

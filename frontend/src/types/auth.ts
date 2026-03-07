@@ -1,8 +1,17 @@
+export const UserRole = {
+  Manager: "manager",
+  Kasir: "kasir",
+  Kurir: "kurir",
+  Pelanggan: "pelanggan",
+} as const;
+
+export type UserRole = (typeof UserRole)[keyof typeof UserRole];
+
 export interface User {
   id: number;
   name: string;
   email: string;
-  role: "manager" | "kasir" | "kurir" | "pelanggan";
+  role: UserRole;
   role_label: string;
   phone: string | null;
   status: "active" | "inactive";

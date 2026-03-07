@@ -2,25 +2,76 @@
 
 namespace App\Http\Controllers\Api\Courier;
 
+use App\Enums\DeliveryStatus;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Delivery\UpdateDeliveryStatusRequest;
+use App\Http\Resources\DeliveryResource;
+use App\Models\Delivery;
+use App\Services\DeliveryService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class DeliveryController extends Controller
 {
-    public function index(): JsonResponse
+    public function __construct(
+        private readonly DeliveryService $deliveryService
+    ) {}
+
+    /**
+     * GET /api/courier/deliveries
+     */
+    public function index(Request $request): JsonResponse
     {
-        // Akan diimplementasi di Module 7
-        return response()->json(['message' => 'Coming in Module 7'], 501);
+        $deliveries = $this->deliveryService->getDeliveries(
+            $request->only(['status', 'per_page', 'page']),
+            $request->user()
+        );
+
+        return response()->json(
+            DeliveryResource::collection($deliveries)
+                ->additional([
+                    'active' => $this->deliveryService->getActiveDeliveries($request->user()),
+                ])
+                ->response()->getData(true)
+        );
     }
 
-    public function updateStatus(Request $request, int $deliveryId): JsonResponse
+    /**
+     * PATCH /api/courier/deliveries/{delivery}/status
+     */
+    public function updateStatus(UpdateDeliveryStatusRequest $request, Delivery $delivery): JsonResponse
     {
-        return response()->json(['message' => 'Coming in Module 7'], 501);
+        $updated = $this->deliveryService->updateStatus(
+            $delivery,
+            DeliveryStatus::from($request->status),
+            $request->user(),
+            $request->notes
+        );
+
+        return response()->json([
+            'message' => 'Status pengiriman diperbarui.',
+            'data'    => new DeliveryResource($updated),
+        ]);
     }
 
-    public function uploadProof(Request $request, int $deliveryId): JsonResponse
+    /**
+     * POST /api/courier/deliveries/{delivery}/proof
+     */
+    public function uploadProof(Request $request, Delivery $delivery): JsonResponse
     {
-        return response()->json(['message' => 'Coming in Module 7'], 501);
+        $request->validate([
+            'proof_image' => ['required', 'image', 'mimes:jpg,jpeg,png', 'max:5120'],
+        ]);
+
+        $updated = $this->deliveryService->uploadProof(
+            $delivery,
+            $request->file('proof_image'),
+            $request->user()
+        );
+
+        return response()->json([
+            'message' => 'Foto bukti berhasil diupload.',
+            'data'    => new DeliveryResource($updated),
+        ]);
     }
 }

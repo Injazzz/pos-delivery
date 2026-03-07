@@ -3,6 +3,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { User } from "@/types/auth";
 import { authApi } from "@/api/auth";
+import { updateEchoToken, disconnectEcho } from "@/lib/echo";
 
 interface AuthState {
   user: User | null;
@@ -44,6 +45,7 @@ export const useAuthStore = create<AuthState>()(
         } catch (_) {
           // silent fail — tetap logout di client
         } finally {
+          disconnectEcho();
           localStorage.removeItem("auth_token");
           set({ user: null, token: null });
         }
@@ -54,6 +56,11 @@ export const useAuthStore = create<AuthState>()(
         try {
           const res = await authApi.me();
           set({ user: res.data.data });
+
+          const token = get().token;
+          if (token) {
+            updateEchoToken(token);
+          }
         } catch (_) {
           localStorage.removeItem("auth_token");
           set({ user: null, token: null });

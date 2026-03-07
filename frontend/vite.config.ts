@@ -46,7 +46,7 @@ export default defineConfig({
         clientsClaim: true,
         runtimeCaching: [
           {
-            // Cache API calls untuk offline
+            // ✅ PERBAIKAN: Gunakan string regex, bukan RegExp object
             urlPattern: /^https:\/\/localhost:8000\/api\/.*/i,
             handler: "NetworkFirst",
             options: {
@@ -59,7 +59,7 @@ export default defineConfig({
             },
           },
           {
-            // Cache gambar menu
+            // ✅ PERBAIKAN: Cache untuk gambar
             urlPattern: /^https:\/\/localhost:8000\/storage\/.*/i,
             handler: "CacheFirst",
             options: {
@@ -74,7 +74,7 @@ export default defineConfig({
       },
 
       devOptions: {
-        enabled: false,
+        enabled: false, // ✅ Matikan PWA di development
         navigateFallback: "index.html",
         suppressWarnings: true,
         type: "module",
@@ -96,6 +96,11 @@ export default defineConfig({
       "/storage": {
         target: "http://localhost:8000",
         changeOrigin: true,
+      },
+      "/broadcasting": {
+        target: "http://localhost:8000",
+        changeOrigin: true,
+        secure: false,
       },
     },
   },
