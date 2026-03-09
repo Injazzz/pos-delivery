@@ -9,9 +9,6 @@ use App\Http\Controllers\Api\Customer;
 use App\Http\Controllers\Api\Courier;
 use App\Http\Controllers\Api\Shared;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Broadcast;
-use Illuminate\Support\Facades\Log;
-use App\Enums\UserRole;
 
 // =====================
 // PUBLIC ROUTES
@@ -110,6 +107,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('payments/cash',        [Cashier\PaymentController::class, 'cash']);
         Route::post('payments/downpayment', [Cashier\PaymentController::class, 'downpayment']);
         Route::post('payments/remaining',   [Cashier\PaymentController::class, 'remaining']);
+        Route::post('payments/midtrans',    [Cashier\PaymentController::class, 'midtrans']);
         Route::get('orders/{order}/receipt',[Cashier\PaymentController::class, 'receipt']);
         Route::get('menus', [Shared\MenuController::class, 'index']);
         Route::get('orders/{order}/receipt', [Manager\ReportController::class, 'receipt']);

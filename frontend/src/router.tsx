@@ -1,15 +1,19 @@
-import { createBrowserRouter, Navigate } from "react-router-dom";
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import {
+  RequireAuth,
+  RequireRole,
+  RedirectIfAuth,
+} from "@/components/layout/RoleGuard";
+import RoleBasedRedirect from "@/components/layout/RoleBasedRedirect";
+import { AppShell } from "@/components/layout/AppShell";
 
-// Layouts
-import AppShell from "@/components/layout/AppShell";
-
-// Auth pages
+// ─── Auth pages ───────────────────────────────────────────────────────────────
 import LoginPage from "@/pages/auth/LoginPage";
 import RegisterPage from "@/pages/auth/RegisterPage";
 import ForgotPasswordPage from "@/pages/auth/ForgotPasswordPage";
 import ResetPasswordPage from "@/pages/auth/ResetPasswordPage";
 
-// Manager pages
+// ─── Manager ──────────────────────────────────────────────────────────────────
 import ManagerDashboard from "@/pages/manager/dashboard";
 import ManagerUsers from "@/pages/manager/users";
 import ManagerMenus from "@/pages/manager/menus";
@@ -19,30 +23,48 @@ import ManagerReceipts from "@/pages/manager/receipts";
 import ManagerReports from "@/pages/manager/reports";
 import ActivityLogsPage from "@/pages/manager/activity-logs";
 
-// Cashier pages
+// ─── Kasir ────────────────────────────────────────────────────────────────────
 import CashierDashboard from "@/pages/cashier/dashboard";
-import CashierNewOrder from "@/pages/cashier/new-order";
-import CashierPayment from "@/pages/cashier/payment";
+import NewOrderPage from "@/pages/cashier/new-order";
+import PaymentPage from "@/pages/cashier/payment";
+import PendingOrdersPage from "@/pages/cashier/pending-orders";
+import CashierHistoryPage from "@/pages/cashier/history";
 
-// Customer pages
-import CustomerMenu from "@/pages/customer/MenuPage";
-import CustomerCart from "@/pages/customer/CartPage";
-import CustomerOrders from "@/pages/customer/orders";
-
-// Courier pages
+// ─── Kurir ────────────────────────────────────────────────────────────────────
 import CourierDashboard from "@/pages/courier/dashboard";
-import CourierDeliveryDetail from "@/pages/courier/delivery";
+import CourierDelivery from "@/pages/courier/delivery";
+import CourierAssignedPage from "@/pages/courier/assigned";
+import CourierHistoryPage from "@/pages/courier/history";
 
-// Guard components (defined below)
-import {
-  RequireAuth,
-  RequireRole,
-  RedirectIfAuth,
-} from "@/components/layout/RoleGuard";
-import RoleBasedRedirect from "@/components/layout/RoleBasedRedirect";
+// ─── Pelanggan ────────────────────────────────────────────────────────────────
+import CustomerMenuPage from "@/pages/customer/menus";
+import CustomerMenuDetailPage from "@/pages/customer/menus/detail";
+import CustomerOrdersPage from "@/pages/customer/orders";
 
-export const router = createBrowserRouter([
-  // ── PUBLIC ROUTES ────────────────────────────
+// ─── Shared ───────────────────────────────────────────────────────────────────
+import NotificationsPage from "@/pages/shared/notifications";
+
+// ─── Misc ─────────────────────────────────────────────────────────────────────
+import UnauthorizedPage from "@/pages/Unauthorized";
+import NotFoundPage from "@/pages/NotFound";
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+function ManagerOnly({ children }: { children: React.ReactNode }) {
+  return <RequireRole roles={["manager"]}>{children}</RequireRole>;
+}
+function KasirOnly({ children }: { children: React.ReactNode }) {
+  return <RequireRole roles={["kasir"]}>{children}</RequireRole>;
+}
+function KurirOnly({ children }: { children: React.ReactNode }) {
+  return <RequireRole roles={["kurir"]}>{children}</RequireRole>;
+}
+function PelangganOnly({ children }: { children: React.ReactNode }) {
+  return <RequireRole roles={["pelanggan"]}>{children}</RequireRole>;
+}
+
+// ─── Router ───────────────────────────────────────────────────────────────────
+const router = createBrowserRouter([
+  // ── Public: redirect jika sudah login ──────────────────────────────────────
   {
     path: "/login",
     element: (
@@ -68,178 +90,208 @@ export const router = createBrowserRouter([
     ),
   },
   {
+    // Reset password tidak wrap RedirectIfAuth — user bisa akses dari email link
     path: "/reset-password",
-    element: (
-      <RedirectIfAuth>
-        <ResetPasswordPage />
-      </RedirectIfAuth>
-    ),
+    element: <ResetPasswordPage />,
   },
 
-  // ── PROTECTED ROUTES ─────────────────────────
+  // ── Protected: wajib login ─────────────────────────────────────────────────
   {
-    path: "/",
     element: (
       <RequireAuth>
         <AppShell />
       </RequireAuth>
     ),
     children: [
-      // Root redirect berdasarkan role
-      {
-        index: true,
-        element: <RoleBasedRedirect />,
-      },
+      // Default "/" → redirect ke dashboard sesuai role
+      { index: true, element: <RoleBasedRedirect /> },
 
-      // ── Manager ──────────────────────────────
-      {
-        path: "manager",
-        element: (
-          <RequireRole roles={["manager"]}>
-            <Navigate to="/manager/dashboard" />
-          </RequireRole>
-        ),
-      },
+      // ── Manager ─────────────────────────────────────────────────────────
       {
         path: "manager/dashboard",
         element: (
-          <RequireRole roles={["manager"]}>
+          <ManagerOnly>
             <ManagerDashboard />
-          </RequireRole>
+          </ManagerOnly>
         ),
       },
       {
         path: "manager/users",
         element: (
-          <RequireRole roles={["manager"]}>
+          <ManagerOnly>
             <ManagerUsers />
-          </RequireRole>
+          </ManagerOnly>
         ),
       },
       {
         path: "manager/menus",
         element: (
-          <RequireRole roles={["manager"]}>
+          <ManagerOnly>
             <ManagerMenus />
-          </RequireRole>
+          </ManagerOnly>
         ),
       },
       {
         path: "manager/orders",
         element: (
-          <RequireRole roles={["manager"]}>
+          <ManagerOnly>
             <ManagerOrders />
-          </RequireRole>
+          </ManagerOnly>
         ),
       },
       {
         path: "manager/deliveries",
         element: (
-          <RequireRole roles={["manager"]}>
+          <ManagerOnly>
             <ManagerDeliveries />
-          </RequireRole>
+          </ManagerOnly>
         ),
       },
       {
         path: "manager/receipts",
         element: (
-          <RequireRole roles={["manager"]}>
+          <ManagerOnly>
             <ManagerReceipts />
-          </RequireRole>
-        ),
-      },
-      {
-        path: "manager/activity-logs",
-        element: (
-          <RequireRole roles={["manager"]}>
-            <ActivityLogsPage />
-          </RequireRole>
+          </ManagerOnly>
         ),
       },
       {
         path: "manager/reports",
         element: (
-          <RequireRole roles={["manager"]}>
+          <ManagerOnly>
             <ManagerReports />
-          </RequireRole>
+          </ManagerOnly>
+        ),
+      },
+      {
+        path: "manager/activity-logs",
+        element: (
+          <ManagerOnly>
+            <ActivityLogsPage />
+          </ManagerOnly>
         ),
       },
 
-      // ── Kasir ─────────────────────────────────
+      // ── Kasir ───────────────────────────────────────────────────────────
       {
         path: "cashier/dashboard",
         element: (
-          <RequireRole roles={["kasir", "manager"]}>
+          <KasirOnly>
             <CashierDashboard />
-          </RequireRole>
+          </KasirOnly>
         ),
       },
       {
         path: "cashier/new-order",
         element: (
-          <RequireRole roles={["kasir", "manager"]}>
-            <CashierNewOrder />
-          </RequireRole>
+          <KasirOnly>
+            <NewOrderPage />
+          </KasirOnly>
         ),
       },
       {
-        path: "cashier/payment/:orderId",
+        path: "cashier/payment/:id",
         element: (
-          <RequireRole roles={["kasir", "manager"]}>
-            <CashierPayment />
-          </RequireRole>
+          <KasirOnly>
+            <PaymentPage />
+          </KasirOnly>
+        ),
+      },
+      {
+        path: "cashier/pending-orders",
+        element: (
+          <KasirOnly>
+            <PendingOrdersPage />
+          </KasirOnly>
+        ),
+      },
+      {
+        path: "cashier/history",
+        element: (
+          <KasirOnly>
+            <CashierHistoryPage />
+          </KasirOnly>
         ),
       },
 
-      // ── Customer ──────────────────────────────
-      {
-        path: "menu",
-        element: (
-          <RequireRole roles={["pelanggan", "manager"]}>
-            <CustomerMenu />
-          </RequireRole>
-        ),
-      },
-      {
-        path: "cart",
-        element: (
-          <RequireRole roles={["pelanggan", "manager"]}>
-            <CustomerCart />
-          </RequireRole>
-        ),
-      },
-      {
-        path: "my-orders",
-        element: (
-          <RequireRole roles={["pelanggan", "manager"]}>
-            <CustomerOrders />
-          </RequireRole>
-        ),
-      },
-
-      // ── Kurir ─────────────────────────────────
+      // ── Kurir ───────────────────────────────────────────────────────────
       {
         path: "courier/dashboard",
         element: (
-          <RequireRole roles={["kurir", "manager"]}>
+          <KurirOnly>
             <CourierDashboard />
-          </RequireRole>
+          </KurirOnly>
         ),
       },
       {
-        path: "courier/delivery/:deliveryId",
+        path: "courier/assigned",
         element: (
-          <RequireRole roles={["kurir", "manager"]}>
-            <CourierDeliveryDetail />
-          </RequireRole>
+          <KurirOnly>
+            <CourierAssignedPage />
+          </KurirOnly>
+        ),
+      },
+      {
+        path: "courier/history",
+        element: (
+          <KurirOnly>
+            <CourierHistoryPage />
+          </KurirOnly>
+        ),
+      },
+      {
+        path: "courier/deliveries/:deliveryId",
+        element: (
+          <KurirOnly>
+            <CourierDelivery />
+          </KurirOnly>
+        ),
+      },
+
+      // ── Pelanggan ───────────────────────────────────────────────────────
+      // Path sesuai RoleBasedRedirect: /menu dan /orders
+      {
+        path: "menu",
+        element: (
+          <PelangganOnly>
+            <CustomerMenuPage />
+          </PelangganOnly>
+        ),
+      },
+      {
+        path: "menu/:id",
+        element: (
+          <PelangganOnly>
+            <CustomerMenuDetailPage />
+          </PelangganOnly>
+        ),
+      },
+      {
+        path: "orders",
+        element: (
+          <PelangganOnly>
+            <CustomerOrdersPage />
+          </PelangganOnly>
+        ),
+      },
+
+      // ── Shared (untuk semua authenticated users) ─────────────────────────
+      {
+        path: "notifications",
+        element: (
+          <RequireAuth>
+            <NotificationsPage />
+          </RequireAuth>
         ),
       },
     ],
   },
 
-  // Catch-all 404
-  {
-    path: "*",
-    element: <Navigate to="/" replace />,
-  },
+  // ── Misc ───────────────────────────────────────────────────────────────────
+  { path: "/unauthorized", element: <UnauthorizedPage /> },
+  { path: "*", element: <NotFoundPage /> },
 ]);
+
+export function AppRouter() {
+  return <RouterProvider router={router} />;
+}

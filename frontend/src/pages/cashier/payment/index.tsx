@@ -20,7 +20,7 @@ import type { PaymentMethod } from "@/types/payment";
 import type { MidtransResult, ReceiptData } from "@/types/payment";
 
 export default function CashierPayment() {
-  const { orderId } = useParams<{ orderId: string }>();
+  const { id: orderId } = useParams<{ id: string }>();
   const qc = useQueryClient();
   const id = Number(orderId);
 
@@ -28,20 +28,8 @@ export default function CashierPayment() {
   const [receiptData, setReceiptData] = useState<ReceiptData | null>(null);
   const [snapData, setSnapData] = useState<MidtransResult | null>(null);
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { data: order, isLoading } = useQuery({
-    queryKey: ["payment-order", id],
-    queryFn: () =>
-      ordersApi.cashierReceipt(id).then((r) => {
-        // cashierReceipt mengembalikan receipt data, kita butuh order
-        // gunakan cashierOrders sebagai workaround atau buat endpoint terpisah
-        return r.data.data;
-      }),
-    enabled: !!id,
-  });
-
   // Re-fetch order detail properly
-  const { data: fullOrder } = useQuery({
+  const { data: fullOrder, isLoading } = useQuery({
     queryKey: ["cashier-order-full", id],
     queryFn: () =>
       ordersApi
@@ -68,6 +56,18 @@ export default function CashierPayment() {
     onError: (err: any) => toast.error(err.response?.data?.message ?? "Gagal."),
   });
 
+  // Remaining Payment (Pelunasan)
+  const remainingMutation = useMutation({
+    mutationFn: ({ amount, m }: { amount: number; m: string }) =>
+      paymentsApi.remaining(fullOrder?.payment?.id as number, amount, m),
+    onSuccess: (res) => {
+      setReceiptData(res.data.receipt_data);
+      qc.invalidateQueries({ queryKey: ["cashier-order-full", id] });
+      toast.success("Pelunasan berhasil dicatat!");
+    },
+    onError: (err: any) => toast.error(err.response?.data?.message ?? "Gagal."),
+  });
+
   // Midtrans
   const midtransMutation = useMutation({
     mutationFn: ({ amount, m }: { amount: number; m: string }) =>
@@ -84,7 +84,12 @@ export default function CashierPayment() {
     );
   }
 
-  // Sudah dibayar — tampilkan printer
+  // Payment already completed (status = 'paid')
+  const paymentStatus = fullOrder.payment?.status;
+  const isPaymentComplete = paymentStatus === "paid";
+  const isPartialPayment = paymentStatus === "partial";
+
+  // Show receipt when payment succeeds
   if (receiptData) {
     return (
       <div className="max-w-2xl mx-auto">
@@ -96,10 +101,139 @@ export default function CashierPayment() {
     );
   }
 
+  // Show read-only state if payment is already completed
+  if (isPaymentComplete) {
+    // For DP payments, show both the DP method and the actual payment method
+    const methodLabel = (method?: string) => {
+      const map: Record<string, string> = {
+        cash: "Tunai",
+        transfer: "Transfer Bank",
+        qris: "QRIS",
+        midtrans: "Midtrans",
+        downpayment: "Uang Muka (DP)",
+      };
+      return map[method || "cash"] || method || "Tidak diketahui";
+    };
+
+    const isDownpaymentMethod = fullOrder.payment?.method === "downpayment";
+
+    return (
+      <div className="max-w-3xl mx-auto space-y-6">
+        <div>
+          <h1 className="text-2xl font-bold text-white">Pembayaran</h1>
+          <p className="text-slate-400 text-sm mt-1">
+            Pembayaran sudah selesai
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-6">
+          {/* Left: Read-only payment info */}
+          <div className="space-y-5">
+            <div className="bg-slate-900 border border-green-500/30 rounded-xl p-4 space-y-4">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-green-500 rounded-full" />
+                <p className="text-sm font-semibold text-slate-300">
+                  Status Pembayaran: LUNAS
+                </p>
+              </div>
+
+              <div className="bg-slate-800/50 rounded-lg p-4 space-y-3">
+                {isDownpaymentMethod ? (
+                  <>
+                    <div className="flex justify-between">
+                      <span className="text-slate-400">Metode Pembayaran:</span>
+                      <span className="text-orange-400 font-semibold">
+                        {methodLabel(fullOrder.payment?.method)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-400">DP Awal Dibayar:</span>
+                      <span className="text-amber-400 font-bold">
+                        Rp{" "}
+                        {(fullOrder.payment?.amount_paid || 0).toLocaleString(
+                          "id-ID",
+                        )}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-400">Pelunasan Dibayar:</span>
+                      <span className="text-amber-400 font-bold">
+                        Rp{" "}
+                        {(
+                          (fullOrder.payment?.amount || 0) -
+                          (fullOrder.payment?.amount_paid || 0)
+                        ).toLocaleString("id-ID")}
+                      </span>
+                    </div>
+                    <div className="flex justify-between border-t border-slate-700 pt-3">
+                      <span className="text-white font-medium">
+                        Total Pembayaran:
+                      </span>
+                      <span className="text-green-400 font-bold">
+                        Rp{" "}
+                        {(fullOrder.payment?.amount || 0).toLocaleString(
+                          "id-ID",
+                        )}
+                      </span>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="flex justify-between">
+                      <span className="text-slate-400">Metode Pembayaran:</span>
+                      <span className="text-white font-semibold">
+                        {methodLabel(fullOrder.payment?.method)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-400">Jumlah Dibayar:</span>
+                      <span className="text-amber-400 font-bold">
+                        Rp{" "}
+                        {(fullOrder.payment?.amount || 0).toLocaleString(
+                          "id-ID",
+                        )}
+                      </span>
+                    </div>
+                  </>
+                )}
+                <div className="flex justify-between border-t border-slate-700 pt-3">
+                  <span className="text-slate-400">Tanggal Pembayaran:</span>
+                  <span className="text-white font-semibold">
+                    {fullOrder.payment?.paid_at
+                      ? new Date(fullOrder.payment.paid_at).toLocaleDateString(
+                          "id-ID",
+                          {
+                            year: "numeric",
+                            month: "long",
+                            day: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          },
+                        )
+                      : "-"}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Right: Order summary */}
+          <div className="lg:sticky lg:top-6 h-fit">
+            <PaymentSummary order={fullOrder} />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   const total =
     fullOrder.payment?.status === "partial"
       ? fullOrder.payment.amount_remaining
       : fullOrder.total_price;
+
+  // For partial payment, only show downpayment remaining form
+  const showDownpaymentRemaining =
+    isPartialPayment && fullOrder.payment?.method === "downpayment";
 
   const handleMidtransInit = () => {
     const m = method === "downpayment" ? "midtrans" : (method ?? "midtrans");
@@ -111,22 +245,67 @@ export default function CashierPayment() {
       <div>
         <h1 className="text-2xl font-bold text-white">Pembayaran</h1>
         <p className="text-slate-400 text-sm mt-1">
-          Pilih metode dan proses pembayaran
+          {showDownpaymentRemaining
+            ? "Selesaikan pembayaran sisa DP"
+            : "Pilih metode dan proses pembayaran"}
         </p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-6">
         {/* Left: Method + Form */}
         <div className="space-y-5">
-          <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 space-y-4">
-            <p className="text-sm font-semibold text-slate-300">
-              Metode Pembayaran
-            </p>
-            <PaymentMethodSelector selected={method} onSelect={setMethod} />
-          </div>
+          {/* Only show method selector if NOT doing pelunasan */}
+          {!showDownpaymentRemaining && (
+            <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 space-y-4">
+              <p className="text-sm font-semibold text-slate-300">
+                Metode Pembayaran
+              </p>
+              <PaymentMethodSelector
+                selected={method}
+                onSelect={setMethod}
+                disabled={isPartialPayment && method !== "downpayment"}
+              />
+            </div>
+          )}
 
-          {/* Conditional form per method */}
-          {method && (
+          {/* Pelunasan Form - Auto show for partial DP */}
+          {showDownpaymentRemaining && (
+            <div className="bg-slate-900 border border-amber-500/30 rounded-xl p-4">
+              <div className="space-y-3 mb-4">
+                <p className="text-sm font-semibold text-amber-400">
+                  Pelunasan Uang Muka (DP)
+                </p>
+                <div className="bg-slate-800/50 rounded-lg p-3 space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-slate-400">DP Sebelumnya:</span>
+                    <span className="text-white font-semibold">
+                      Rp{" "}
+                      {(fullOrder.payment?.amount_paid || 0).toLocaleString(
+                        "id-ID",
+                      )}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-slate-400">Sisa Pembayaran:</span>
+                    <span className="text-amber-400 font-bold">
+                      Rp {total.toLocaleString("id-ID")}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <DownpaymentForm
+                total={total}
+                isLoading={remainingMutation.isPending}
+                onSubmit={(amount, m) =>
+                  remainingMutation.mutate({ amount, m })
+                }
+                isPartialPayment={true}
+              />
+            </div>
+          )}
+
+          {/* Default form when method is selected */}
+          {method && !showDownpaymentRemaining && (
             <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
               {method === "cash" && (
                 <CashPaymentForm
@@ -141,6 +320,7 @@ export default function CashierPayment() {
                   total={total}
                   isLoading={dpMutation.isPending}
                   onSubmit={(amount, m) => dpMutation.mutate({ amount, m })}
+                  isPartialPayment={false}
                 />
               )}
 

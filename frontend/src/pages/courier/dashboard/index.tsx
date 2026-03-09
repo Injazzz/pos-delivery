@@ -126,7 +126,7 @@ export default function CourierDashboard() {
             {history.slice(0, 5).map((delivery: any) => (
               <div
                 key={delivery.id}
-                onClick={() => navigate(`/courier/delivery/${delivery.id}`)}
+                onClick={() => navigate(`/courier/deliveries/${delivery.id}`)}
                 className="bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 flex items-center justify-between gap-3 cursor-pointer hover:border-slate-700 transition-colors"
               >
                 <div className="min-w-0">

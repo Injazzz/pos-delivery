@@ -1,4 +1,4 @@
-import { Banknote, QrCode, Building2, CreditCard, Wallet } from "lucide-react";
+import { Banknote, CreditCard, Wallet } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { PaymentMethod } from "@/types/payment";
 
@@ -16,25 +16,25 @@ const METHODS: Array<{
     desc: "Bayar langsung",
     color: "text-emerald-400",
   },
-  {
-    value: "qris",
-    label: "QRIS",
-    icon: QrCode,
-    desc: "Scan kode QR",
-    color: "text-blue-400",
-  },
-  {
-    value: "transfer",
-    label: "Transfer Bank",
-    icon: Building2,
-    desc: "Transfer rekening",
-    color: "text-violet-400",
-  },
+  // {
+  //   value: "qris",
+  //   label: "QRIS",
+  //   icon: QrCode,
+  //   desc: "Scan kode QR",
+  //   color: "text-blue-400",
+  // },
+  // {
+  //   value: "transfer",
+  //   label: "Transfer Bank",
+  //   icon: Building2,
+  //   desc: "Transfer rekening",
+  //   color: "text-violet-400",
+  // },
   {
     value: "midtrans",
     label: "Midtrans",
     icon: CreditCard,
-    desc: "Kartu/e-wallet online",
+    desc: "Qris/Transfer/e-wallet online",
     color: "text-amber-400",
   },
   {
@@ -49,21 +49,43 @@ const METHODS: Array<{
 interface Props {
   selected: PaymentMethod | null;
   onSelect: (method: PaymentMethod) => void;
+  disabled?: boolean;
+  allowDownpaymentRemaining?: boolean;
 }
 
-export function PaymentMethodSelector({ selected, onSelect }: Props) {
+export function PaymentMethodSelector({
+  selected,
+  onSelect,
+  disabled = false,
+  allowDownpaymentRemaining = false,
+}: Props) {
+  // If only downpayment remaining is allowed, only show downpayment
+  if (allowDownpaymentRemaining) {
+    return (
+      <div className="bg-slate-800 rounded-xl p-4 text-sm">
+        <p className="text-slate-400 mb-2">Pembayaran Sisa:</p>
+        <p className="text-amber-400 font-semibold">
+          Uang Muka (DP) - Pelunasan
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
       {METHODS.map((m) => (
         <button
           key={m.value}
           type="button"
-          onClick={() => onSelect(m.value)}
+          onClick={() => !disabled && onSelect(m.value)}
+          disabled={disabled}
           className={cn(
             "flex flex-col items-center gap-2 p-3 rounded-xl border text-center transition-all",
-            selected === m.value
-              ? "bg-amber-500/10 border-amber-500 shadow-lg shadow-amber-500/10"
-              : "bg-slate-800 border-slate-700 hover:border-slate-600",
+            disabled
+              ? "opacity-50 cursor-not-allowed bg-slate-800 border-slate-700"
+              : selected === m.value
+                ? "bg-amber-500/10 border-amber-500 shadow-lg shadow-amber-500/10"
+                : "bg-slate-800 border-slate-700 hover:border-slate-600 hover:cursor-pointer",
           )}
         >
           <div

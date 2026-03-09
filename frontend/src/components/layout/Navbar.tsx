@@ -3,14 +3,11 @@ import { Separator } from "@/components/ui/separator";
 import { Wifi, WifiOff } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useOffline } from "@/hooks/useOffline";
-import { useAuthStore } from "@/stores/authStore";
 import { useBreadcrumb } from "@/hooks/useBreadcrumb";
 import { NotificationBell } from "../shared/NotificationBell";
 
 export function AppNavbar() {
-  const isOffline = useOffline();
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { user } = useAuthStore();
+  const { isOnline } = useOffline();
   const breadcrumb = useBreadcrumb();
 
   return (
@@ -39,7 +36,7 @@ export function AppNavbar() {
       {/* Right side */}
       <div className="flex items-center gap-2">
         {/* Offline indicator */}
-        {isOffline ? (
+        {!isOnline ? (
           <Badge
             variant="outline"
             className="gap-1 text-[11px] border-orange-500/50 text-orange-400 bg-orange-500/10"

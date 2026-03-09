@@ -104,9 +104,9 @@ export function MidtransPayment({
       </div>
 
       <div className="bg-blue-500/10 border border-blue-500/30 rounded-xl p-3 text-xs text-blue-300">
-        💡 Klik tombol di bawah untuk membuka halaman pembayaran Midtrans.
-        Pelanggan bisa memilih metode: kartu kredit, GoPay, OVO, Dana,
-        ShopeePay, dan lainnya.
+        Klik tombol di bawah untuk membuka halaman pembayaran Midtrans.
+        Pelanggan bisa memilih metode: kartu kredit, Qris, Transfer, GoPay, OVO,
+        Dana, ShopeePay, dan lainnya.
       </div>
 
       <Button

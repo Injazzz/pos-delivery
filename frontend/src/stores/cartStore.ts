@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { Menu } from "@/types/menu";
+import type { OrderType } from "@/types/order";
 
 export interface CartItem {
   menu: Menu;
@@ -10,7 +11,7 @@ export interface CartItem {
 
 interface CartState {
   items: CartItem[];
-  orderType: "dine_in" | "take_away" | "delivery";
+  orderType: OrderType;
   tableNumber: string;
   deliveryAddress: string;
   deliveryCity: string;
@@ -22,7 +23,7 @@ interface CartState {
   updateQty: (menuId: number, qty: number) => void;
   updateNote: (menuId: number, note: string) => void;
   clearCart: () => void;
-  setOrderType: (type: CartState["orderType"]) => void;
+  setOrderType: (type: OrderType) => void;
   setTableNumber: (v: string) => void;
   setDeliveryInfo: (
     info: Partial<

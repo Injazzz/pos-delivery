@@ -23,13 +23,42 @@ export default function CourierDeliveryDetailPage() {
       deliveriesApi
         .courierList({ per_page: 100 })
         .then((r) => r.data.data.find((d: any) => d.id === id)),
+    enabled: !isNaN(id) && id > 0,
     refetchInterval: 10_000,
   });
 
-  if (isLoading || !data) {
+  if (isNaN(id) || id <= 0) {
+    return (
+      <div className="flex flex-col items-center justify-center h-64 gap-4">
+        <p className="text-slate-400">Delivery ID tidak valid</p>
+        <Button
+          variant="outline"
+          onClick={() => navigate("/courier/dashboard")}
+        >
+          Kembali ke Dashboard
+        </Button>
+      </div>
+    );
+  }
+
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
         <Loader2 className="w-8 h-8 animate-spin text-amber-500" />
+      </div>
+    );
+  }
+
+  if (!data) {
+    return (
+      <div className="flex flex-col items-center justify-center h-64 gap-4">
+        <p className="text-slate-400">Data pengiriman tidak ditemukan</p>
+        <Button
+          variant="outline"
+          onClick={() => navigate("/courier/dashboard")}
+        >
+          Kembali ke Dashboard
+        </Button>
       </div>
     );
   }

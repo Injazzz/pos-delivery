@@ -1,37 +1,35 @@
-import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { Search, Plus } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { menusApi } from "@/api/menus";
-import { useDebounce } from "@/hooks/useDebounce";
+import { useCartStore } from "@/stores/cartStore";
 import type { Menu } from "@/types/menu";
 
-interface Props {
-  onAdd: (menu: Menu) => void;
+interface MenuSelectorProps {
+  menus: Menu[];
+  isLoading: boolean;
+  search: string;
+  onSearchChange: (search: string) => void;
+  category: string;
+  onCategoryChange: (category: string) => void;
 }
 
-export function MenuSelector({ onAdd }: Props) {
-  const [search, setSearch] = useState("");
-  const [category, setCategory] = useState("all");
-  const debouncedSearch = useDebounce(search, 300);
+export function MenuSelector({
+  menus,
+  isLoading,
+  search,
+  onSearchChange,
+  category,
+  onCategoryChange,
+}: MenuSelectorProps) {
+  const { addItem } = useCartStore();
 
-  const { data, isLoading } = useQuery({
-    queryKey: ["public-menus", debouncedSearch, category],
-    queryFn: () =>
-      menusApi
-        .getPublic({
-          search: debouncedSearch || undefined,
-          category: category === "all" ? undefined : category,
-        })
-        .then((r) => r.data),
-  });
+  // Get unique categories from menus
+  const categories = Array.from(new Set(menus.map((m) => m.category)));
 
-  const categories = data?.categories ?? [];
-  const menus = data?.data
-    ? Object.values(data.data as Record<string, Menu[]>).flat()
-    : [];
+  const handleAddMenu = (menu: Menu) => {
+    addItem(menu, 1, "");
+  };
 
   return (
     <div className="flex flex-col h-full">
@@ -41,7 +39,7 @@ export function MenuSelector({ onAdd }: Props) {
         <Input
           placeholder="Cari menu..."
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={(e) => onSearchChange(e.target.value)}
           className="pl-9 bg-slate-800 border-slate-700 text-white placeholder:text-slate-500 focus:border-amber-500 h-9"
         />
       </div>
@@ -50,19 +48,27 @@ export function MenuSelector({ onAdd }: Props) {
       <div className="flex gap-1.5 mb-3 flex-wrap">
         <Badge
           variant="outline"
-          className={`cursor-pointer text-xs ${category === "all" ? "bg-amber-500 text-slate-950 border-amber-500" : "text-slate-400 border-slate-700 hover:border-slate-500"}`}
-          onClick={() => setCategory("all")}
+          className={`cursor-pointer text-xs transition-colors ${
+            category === ""
+              ? "bg-amber-500 text-slate-950 border-amber-500"
+              : "text-slate-400 border-slate-700 hover:border-slate-500"
+          }`}
+          onClick={() => onCategoryChange("")}
         >
           Semua
         </Badge>
-        {categories.map((c: string) => (
+        {categories.map((cat) => (
           <Badge
-            key={c}
+            key={cat}
             variant="outline"
-            className={`cursor-pointer text-xs ${category === c ? "bg-amber-500 text-slate-950 border-amber-500" : "text-slate-400 border-slate-700 hover:border-slate-500"}`}
-            onClick={() => setCategory(c)}
+            className={`cursor-pointer text-xs transition-colors ${
+              category === cat
+                ? "bg-amber-500 text-slate-950 border-amber-500"
+                : "text-slate-400 border-slate-700 hover:border-slate-500"
+            }`}
+            onClick={() => onCategoryChange(cat)}
           >
-            {c}
+            {cat}
           </Badge>
         ))}
       </div>
@@ -72,8 +78,12 @@ export function MenuSelector({ onAdd }: Props) {
         {isLoading ? (
           <div className="grid grid-cols-2 gap-2">
             {Array.from({ length: 6 }).map((_, i) => (
-              <Skeleton key={i} className="h-20 bg-slate-800 rounded-lg" />
+              <Skeleton key={i} className="h-24 bg-slate-800 rounded-lg" />
             ))}
+          </div>
+        ) : menus.length === 0 ? (
+          <div className="flex items-center justify-center h-full text-slate-500">
+            <p className="text-sm">Tidak ada menu ditemukan</p>
           </div>
         ) : (
           <div className="grid grid-cols-2 gap-2">
@@ -81,7 +91,7 @@ export function MenuSelector({ onAdd }: Props) {
               <button
                 key={menu.id}
                 type="button"
-                onClick={() => onAdd(menu)}
+                onClick={() => handleAddMenu(menu)}
                 disabled={!menu.is_available}
                 className="group flex flex-col bg-slate-800 hover:bg-slate-700 border border-slate-700 hover:border-amber-500/50 rounded-lg p-2.5 text-left transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >

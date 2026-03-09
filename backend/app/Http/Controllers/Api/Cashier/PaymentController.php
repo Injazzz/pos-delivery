@@ -81,6 +81,32 @@ class PaymentController extends Controller
     }
 
     /**
+     * POST /api/cashier/payments/midtrans
+     * Cashier inisiasi pembayaran Midtrans untuk customer
+     */
+    public function midtrans(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'order_id' => ['required', 'exists:orders,id'],
+            'amount'   => ['required', 'numeric', 'min:1000'],
+            'method'   => ['required', 'string'],
+        ]);
+
+        $order = Order::findOrFail($validated['order_id']);
+
+        $result = $this->paymentService->initiateMidtrans(
+            $order,
+            $validated['amount'],
+            $validated['method']
+        );
+
+        return response()->json([
+            'message' => 'Silakan selesaikan pembayaran.',
+            'data'    => $result,
+        ]);
+    }
+
+    /**
      * GET /api/cashier/orders/{order}/receipt
      */
     public function receipt(Order $order): JsonResponse

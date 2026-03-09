@@ -53,7 +53,7 @@ export const menusApi = {
 
   // Public/shared endpoints
   getPublic: (params?: { search?: string; category?: string }) =>
-    apiClient.get("/menus", { params }),
+    apiClient.get<MenuListResponse>("/menus", { params }),
 
-  getPublicOne: (id: number) => apiClient.get(`/menus/${id}`),
+  getPublicOne: (id: number) => apiClient.get<{ data: Menu }>(`/menus/${id}`),
 };

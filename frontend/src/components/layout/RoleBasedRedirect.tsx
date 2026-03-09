@@ -9,7 +9,7 @@ export default function RoleBasedRedirect() {
   const map: Record<string, string> = {
     manager: "/manager/dashboard",
     kasir: "/cashier/dashboard",
-    kurir: "/courier/deliveries",
+    kurir: "/courier/dashboard",
     pelanggan: "/menu",
   };
 

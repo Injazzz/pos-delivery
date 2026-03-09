@@ -36,7 +36,17 @@ export const paymentsApi = {
   // Customer / online
   initiateMidtrans: (orderId: number, amount: number, method: string) =>
     apiClient.post<{ message: string; data: MidtransResult }>(
+      "/cashier/payments/midtrans",
+      { order_id: orderId, amount, method },
+    ),
+
+  // Customer online payment endpoints
+  customerInitiate: (orderId: number, amount: number, method: string) =>
+    apiClient.post<{ message: string; data: MidtransResult }>(
       "/customer/payments/initiate",
       { order_id: orderId, amount, method },
     ),
+
+  customerCallback: (data: any) =>
+    apiClient.post<{ message: string }>("/customer/payments/callback", data),
 };

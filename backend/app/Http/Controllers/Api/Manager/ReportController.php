@@ -11,6 +11,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class ReportController extends Controller
 {
@@ -59,7 +60,7 @@ class ReportController extends Controller
                     ->map->count()
                     ->toArray(),
                 'orders_by_type'   => $orders
-                    ->groupBy('type')
+                    ->groupBy('order_type')
                     ->map->count()
                     ->toArray(),
             ],
@@ -82,12 +83,15 @@ class ReportController extends Controller
             default => '%Y-%m-%d',
         };
 
-        $rows = Payment::whereBetween('created_at', [$from, $to])
-            ->where('status', 'paid')
+        // Join dengan Orders untuk filter status yang konsisten dengan summary
+        $rows = Payment::whereBetween('payments.created_at', [$from, $to])
+            ->where('payments.status', 'paid')
+            ->join('orders', 'payments.order_id', '=', 'orders.id')
+            ->whereNotIn('orders.status', [OrderStatus::Cancelled->value])
             ->select([
-                DB::raw("DATE_FORMAT(created_at, '{$format}') as period"),
-                DB::raw('SUM(amount) as revenue'),
-                DB::raw('COUNT(DISTINCT order_id) as orders'),
+                DB::raw("DATE_FORMAT(payments.created_at, '{$format}') as period"),
+                DB::raw('SUM(payments.amount) as revenue'),
+                DB::raw('COUNT(DISTINCT payments.order_id) as orders'),
             ])
             ->groupBy('period')
             ->orderBy('period')
@@ -183,14 +187,17 @@ class ReportController extends Controller
     {
         [$from, $to] = $this->parseDateRange($request);
 
-        $rows = Payment::whereBetween('created_at', [$from, $to])
-            ->where('status', 'paid')
+        // Join dengan Orders untuk filter status yang konsisten
+        $rows = Payment::whereBetween('payments.created_at', [$from, $to])
+            ->where('payments.status', 'paid')
+            ->join('orders', 'payments.order_id', '=', 'orders.id')
+            ->whereNotIn('orders.status', [OrderStatus::Cancelled->value])
             ->select([
-                'method',
+                'payments.method',
                 DB::raw('COUNT(*) as count'),
-                DB::raw('SUM(amount) as total'),
+                DB::raw('SUM(payments.amount) as total'),
             ])
-            ->groupBy('method')
+            ->groupBy('payments.method')
             ->get();
 
         $labels = [
@@ -202,8 +209,8 @@ class ReportController extends Controller
         ];
 
         $data = $rows->map(fn($r) => [
-            'method'  => $r->method,
-            'label'   => $labels[$r->method] ?? $r->method,
+            'method'  => $r->method->value,
+            'label'   => $labels[$r->method->value] ?? $r->method->value,
             'count'   => (int) $r->count,
             'total'   => (float) $r->total,
         ]);
@@ -236,19 +243,19 @@ class ReportController extends Controller
             ->through(fn($o) => [
                 'id'           => $o->id,
                 'order_code'   => $o->order_code,
-                'type'         => $o->type->value,
-                'type_label'   => match($o->type->value) {
+                'type'         => $o->order_type->value,
+                'type_label'   => match($o->order_type->value) {
                     'dine_in'  => 'Makan di Tempat',
                     'takeaway' => 'Bawa Pulang',
                     'delivery' => 'Delivery',
-                    default    => $o->type->value,
+                    default    => $o->order_type->value,
                 },
                 'status'       => $o->status->value,
                 'status_label' => $o->status->label(),
-                'total'        => (float) $o->total,
+                'total'        => (float) $o->total_price,
                 'customer'     => $o->customer?->user->name ?? 'Walk-in',
                 'cashier'      => $o->cashier?->name ?? '-',
-                'payment_method' => $o->payment?->method ?? '-',
+                'payment_method' => $o->payment?->method?->value ?? '-',
                 'created_at'   => $o->created_at->toISOString(),
             ]);
 
@@ -280,14 +287,14 @@ class ReportController extends Controller
             $i + 1,
             $o->order_code,
             $o->created_at->format('d/m/Y H:i'),
-            $o->type->value,
+            $o->order_type->value,
             $o->status->label(),
             $o->customer?->user->name ?? 'Walk-in',
             $o->cashier?->name ?? '-',
             $o->subtotal,
-            $o->discount_amount ?? 0,
-            $o->total,
-            $o->payment?->method ?? '-',
+            $o->discount ?? 0,
+            $o->total_price,
+            $o->payment?->method?->value ?? '-',
             $o->payment?->amount_paid ?? 0,
             $o->payment?->change_amount ?? 0,
         ]);
@@ -375,6 +382,7 @@ class ReportController extends Controller
                 default => $current->format('Y-m-d'),
             };
 
+            $rowData = $map->get($key) ?? [];
             $result[] = [
                 'period'  => $key,
                 'label'   => match($groupBy) {
@@ -382,8 +390,8 @@ class ReportController extends Controller
                     'week'  => 'Minggu ' . $current->format('W'),
                     default => $current->translatedFormat('d M'),
                 },
-                'revenue' => (float) ($map[$key]->revenue ?? 0),
-                'orders'  => (int)   ($map[$key]->orders  ?? 0),
+                'revenue' => (float) ($rowData['revenue'] ?? 0),
+                'orders'  => (int)   ($rowData['orders']  ?? 0),
             ];
 
             match($groupBy) {

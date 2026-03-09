@@ -1,18 +1,22 @@
-import { useNavigate, useLocation, Link } from "react-router-dom";
+import { useState } from "react";
+import { NavLink, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
+  ShoppingBag,
   Users,
   UtensilsCrossed,
-  ShoppingBag,
-  BarChart3,
   Truck,
-  ShoppingCart,
-  ClipboardList,
-  ChevronRight,
+  BarChart2,
+  Activity,
+  Printer,
   LogOut,
-  Settings,
+  WifiOff,
+  ClipboardList,
+  Package,
+  AlertCircle,
+  List,
+  History,
 } from "lucide-react";
-
 import {
   Sidebar,
   SidebarContent,
@@ -20,275 +24,217 @@ import {
   SidebarGroup,
   SidebarGroupLabel,
   SidebarGroupContent,
-  SidebarHeader,
   SidebarMenu,
-  SidebarMenuButton,
   SidebarMenuItem,
-  SidebarRail,
+  SidebarMenuButton,
+  SidebarHeader,
 } from "@/components/ui/sidebar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Separator } from "@/components/ui/separator";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import { useAuthStore } from "@/stores/authStore";
-import { cn } from "@/lib/utils";
+import { OfflineIndicator } from "@/components/shared/OfflineBanner";
+import { PWAInstallButton } from "@/components/shared/PWAInstallBanner";
 
-// ── Nav config per role ──────────────────────────────────────────────────────
+// ─── Nav items per role ────────────────────────────────────────────────────────
 
-type NavItem = {
-  title: string;
-  url: string;
-  icon: React.ElementType;
-  badge?: string;
-};
-
-type NavGroup = {
-  label: string;
-  items: NavItem[];
-};
-
-const managerNav: NavGroup[] = [
-  {
-    label: "Overview",
-    items: [
-      { title: "Dashboard", url: "/manager/dashboard", icon: LayoutDashboard },
-    ],
-  },
-  {
-    label: "Manajemen",
-    items: [
-      { title: "Pengguna", url: "/manager/users", icon: Users },
-      { title: "Menu", url: "/manager/menus", icon: UtensilsCrossed },
-      { title: "Pesanan", url: "/manager/orders", icon: ShoppingBag },
-    ],
-  },
-  {
-    label: "Laporan",
-    items: [{ title: "Laporan", url: "/manager/reports", icon: BarChart3 }],
-  },
+const MANAGER_NAV = [
+  { title: "Dashboard", url: "/manager/dashboard", icon: LayoutDashboard },
+  { title: "Pengguna", url: "/manager/users", icon: Users },
+  { title: "Menu", url: "/manager/menus", icon: UtensilsCrossed },
+  { title: "Order", url: "/manager/orders", icon: ShoppingBag },
+  { title: "Pengiriman", url: "/manager/deliveries", icon: Truck },
+  { title: "Cetak Ulang", url: "/manager/receipts", icon: Printer },
+  { title: "Laporan", url: "/manager/reports", icon: BarChart2 },
+  { title: "Activity Log", url: "/manager/activity-logs", icon: Activity },
 ];
 
-const kasirNav: NavGroup[] = [
-  {
-    label: "Kasir",
-    items: [
-      { title: "Dashboard", url: "/cashier/dashboard", icon: LayoutDashboard },
-      { title: "Pesanan Baru", url: "/cashier/new-order", icon: ShoppingBag },
-    ],
-  },
+const CASHIER_NAV = [
+  { title: "Dashboard", url: "/cashier/dashboard", icon: LayoutDashboard },
+  { title: "Order Baru", url: "/cashier/new-order", icon: ShoppingBag },
+  { title: "Riwayat Order", url: "/cashier/history", icon: ClipboardList },
+  { title: "Pesanan Offline", url: "/cashier/pending-orders", icon: WifiOff },
 ];
 
-const pelangganNav: NavGroup[] = [
-  {
-    label: "Menu",
-    items: [
-      { title: "Lihat Menu", url: "/menu", icon: UtensilsCrossed },
-      { title: "Keranjang", url: "/cart", icon: ShoppingCart },
-      { title: "Pesanan Saya", url: "/my-orders", icon: ClipboardList },
-    ],
-  },
+const COURIER_NAV = [
+  { title: "Dashboard", url: "/courier/dashboard", icon: LayoutDashboard },
+  { title: "Pesanan Ditugaskan", url: "/courier/assigned", icon: List },
+  { title: "Riwayat Pengiriman", url: "/courier/history", icon: History },
+  // { title: "Pengiriman", url: "/courier/deliveries", icon: Truck },
 ];
 
-const kurirNav: NavGroup[] = [
-  {
-    label: "Pengiriman",
-    items: [{ title: "Pengiriman", url: "/courier/deliveries", icon: Truck }],
-  },
+const CUSTOMER_NAV = [
+  { title: "Menu", url: "/menu", icon: UtensilsCrossed },
+  { title: "Pesanan Saya", url: "/orders", icon: Package },
 ];
 
-const navByRole: Record<string, NavGroup[]> = {
-  manager: managerNav,
-  kasir: kasirNav,
-  pelanggan: pelangganNav,
-  kurir: kurirNav,
-};
+function NavItems({ items }: { items: typeof MANAGER_NAV }) {
+  return (
+    <SidebarMenu>
+      {items.map((item) => (
+        <SidebarMenuItem key={item.url}>
+          <SidebarMenuButton asChild>
+            <NavLink
+              to={item.url}
+              className={({ isActive }) =>
+                isActive
+                  ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+                  : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
+              }
+            >
+              <item.icon className="size-4" />
+              <span>{item.title}</span>
+            </NavLink>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+      ))}
+    </SidebarMenu>
+  );
+}
 
-// ── Role badge colors ─────────────────────────────────────────────────────────
-
-const roleBadgeClass: Record<string, string> = {
-  manager: "bg-violet-500/20 text-violet-300 border-violet-500/30",
-  kasir: "bg-blue-500/20 text-blue-300 border-blue-500/30",
-  pelanggan: "bg-emerald-500/20 text-emerald-300 border-emerald-500/30",
-  kurir: "bg-amber-500/20 text-amber-300 border-amber-500/30",
-};
-
-// ── Component ─────────────────────────────────────────────────────────────────
+// ─── Main Sidebar ─────────────────────────────────────────────────────────────
 
 export function AppSidebar() {
   const { user, logout } = useAuthStore();
-  const location = useLocation();
   const navigate = useNavigate();
+  const [showLogoutDialog, setShowLogoutDialog] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
-  const groups = user ? (navByRole[user.role] ?? []) : [];
+  const role = user?.role ?? "pelanggan";
+  const navItems =
+    role === "manager"
+      ? MANAGER_NAV
+      : role === "kasir"
+        ? CASHIER_NAV
+        : role === "kurir"
+          ? COURIER_NAV
+          : CUSTOMER_NAV;
 
-  const handleLogout = async () => {
-    await logout();
-    navigate("/login");
+  const roleLabel: Record<string, string> = {
+    manager: "Manager",
+    kasir: "Kasir",
+    kurir: "Kurir",
+    pelanggan: "Pelanggan",
   };
 
-  const initials =
-    user?.name
-      .split(" ")
-      .map((w) => w[0])
-      .slice(0, 2)
-      .join("")
-      .toUpperCase() ?? "U";
+  const handleLogoutConfirm = async () => {
+    setIsLoggingOut(true);
+    try {
+      await logout();
+      navigate("/login");
+    } finally {
+      setIsLoggingOut(false);
+      setShowLogoutDialog(false);
+    }
+  };
 
   return (
-    <Sidebar
-      className="border-r border-slate-800 bg-slate-900"
-      collapsible="icon"
-    >
-      {/* ── Header / Logo ───────────────────────── */}
-      <SidebarHeader className="border-b border-slate-800 px-4 py-4">
-        <div className="flex items-center gap-3">
-          <div className="shrink-0 w-8 h-8 rounded-lg bg-amber-500 flex items-center justify-center shadow-lg shadow-amber-500/20">
-            <UtensilsCrossed className="w-4 h-4 text-slate-950" />
+    <>
+      <Sidebar>
+        {/* Header */}
+        <SidebarHeader className="px-4 py-3">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-amber-500 flex items-center justify-center">
+              <UtensilsCrossed className="w-4 h-4 text-white" />
+            </div>
+            <div>
+              <p className="text-sm font-bold leading-tight">POS App</p>
+              <p className="text-[10px] text-sidebar-foreground/50 capitalize">
+                {roleLabel[role]}
+              </p>
+            </div>
           </div>
-          <div className="flex flex-col min-w-0 group-data-[collapsible=icon]:hidden">
-            <span className="text-sm font-bold text-white truncate">
-              POS Delivery
-            </span>
-            <span className="text-[10px] text-slate-500 truncate">
-              Management System
-            </span>
-          </div>
-        </div>
-      </SidebarHeader>
+        </SidebarHeader>
 
-      {/* ── Navigation ──────────────────────────── */}
-      <SidebarContent className="px-2 py-3">
-        {groups.map((group) => (
-          <SidebarGroup key={group.label} className="mb-2">
-            <SidebarGroupLabel className="text-[10px] font-semibold uppercase tracking-widest text-slate-500 px-2 mb-1 group-data-[collapsible=icon]:hidden">
-              {group.label}
+        <Separator className="opacity-20" />
+
+        {/* Nav */}
+        <SidebarContent className="px-2 py-2">
+          <SidebarGroup>
+            <SidebarGroupLabel className="text-[10px] uppercase tracking-wider text-sidebar-foreground/40 px-2 mb-1">
+              Menu
             </SidebarGroupLabel>
             <SidebarGroupContent>
-              <SidebarMenu>
-                {group.items.map((item) => {
-                  const isActive =
-                    location.pathname === item.url ||
-                    location.pathname.startsWith(item.url + "/");
-
-                  return (
-                    <SidebarMenuItem key={item.url}>
-                      <SidebarMenuButton
-                        asChild
-                        isActive={isActive}
-                        tooltip={item.title}
-                        className={cn(
-                          "group/item h-9 rounded-lg transition-all duration-150",
-                          isActive
-                            ? "bg-amber-500/10 text-amber-400 hover:bg-amber-500/15"
-                            : "text-slate-400 hover:text-slate-200 hover:bg-slate-800",
-                        )}
-                      >
-                        <Link to={item.url} className="flex items-center gap-3">
-                          <item.icon
-                            className={cn(
-                              "w-4 h-4 shrink-0 transition-transform group-hover/item:scale-105",
-                              isActive ? "text-amber-400" : "text-slate-500",
-                            )}
-                          />
-                          <span className="text-sm font-medium group-data-[collapsible=icon]:hidden">
-                            {item.title}
-                          </span>
-                          {item.badge && (
-                            <Badge className="ml-auto text-[10px] h-4 px-1.5 bg-amber-500 text-slate-950 group-data-[collapsible=icon]:hidden">
-                              {item.badge}
-                            </Badge>
-                          )}
-                          {isActive && (
-                            <ChevronRight className="ml-auto w-3 h-3 text-amber-400/60 group-data-[collapsible=icon]:hidden" />
-                          )}
-                        </Link>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  );
-                })}
-              </SidebarMenu>
+              <NavItems items={navItems} />
             </SidebarGroupContent>
           </SidebarGroup>
-        ))}
-      </SidebarContent>
+        </SidebarContent>
 
-      {/* ── Footer / User ───────────────────────── */}
-      <SidebarFooter className="border-t border-slate-800 p-2">
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <SidebarMenuButton
-                  size="lg"
-                  className="h-12 rounded-lg hover:bg-slate-800 text-slate-300 data-[state=open]:bg-slate-800"
-                >
-                  <Avatar className="w-7 h-7 shrink-0">
-                    <AvatarImage src={user?.avatar_url} alt={user?.name} />
-                    <AvatarFallback className="bg-amber-500 text-slate-950 text-xs font-bold">
-                      {initials}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex flex-col min-w-0 text-left group-data-[collapsible=icon]:hidden">
-                    <span className="text-xs font-semibold text-white truncate leading-tight">
-                      {user?.name}
-                    </span>
-                    <span
-                      className={cn(
-                        "text-[10px] font-medium px-1.5 py-0.5 rounded-full border w-fit mt-0.5",
-                        roleBadgeClass[user?.role ?? "pelanggan"],
-                      )}
-                    >
-                      {user?.role_label}
-                    </span>
-                  </div>
-                  <ChevronRight className="ml-auto w-3.5 h-3.5 text-slate-500 group-data-[collapsible=icon]:hidden" />
-                </SidebarMenuButton>
-              </DropdownMenuTrigger>
+        {/* Footer */}
+        <SidebarFooter className="px-3 pb-4 space-y-3">
+          {/* Offline status */}
+          <OfflineIndicator />
 
-              <DropdownMenuContent
-                side="top"
-                align="start"
-                className="w-52 bg-slate-900 border-slate-700 text-slate-200"
-              >
-                <div className="px-3 py-2 border-b border-slate-700">
-                  <p className="text-xs font-semibold text-white">
-                    {user?.name}
-                  </p>
-                  <p className="text-[11px] text-slate-400 truncate">
-                    {user?.email}
-                  </p>
-                </div>
+          {/* PWA install button */}
+          <PWAInstallButton />
 
-                <DropdownMenuItem
-                  className="gap-2 text-sm hover:bg-slate-800 cursor-pointer mt-1"
-                  onClick={() => navigate("/profile")}
-                >
-                  <Settings className="w-4 h-4 text-slate-400" />
-                  Pengaturan Profil
-                </DropdownMenuItem>
+          <Separator className="opacity-20" />
 
-                <DropdownMenuSeparator className="bg-slate-700" />
+          {/* User info */}
+          <div className="flex items-center gap-2">
+            <Avatar className="w-8 h-8">
+              <AvatarFallback className="bg-slate-700 text-white text-xs">
+                {user?.name?.slice(0, 2).toUpperCase() ?? "U"}
+              </AvatarFallback>
+            </Avatar>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-medium truncate">{user?.name}</p>
+              <p className="text-[10px] text-sidebar-foreground/50 truncate">
+                {user?.email}
+              </p>
+            </div>
+            <button
+              onClick={() => setShowLogoutDialog(true)}
+              className="text-sidebar-foreground/40 hover:text-red-400 transition-colors p-1 hover:bg-red-500/10 rounded"
+              title="Logout"
+            >
+              <LogOut className="w-4 h-4" />
+            </button>
+          </div>
+        </SidebarFooter>
+      </Sidebar>
 
-                <DropdownMenuItem
-                  className="gap-2 text-sm text-red-400 hover:bg-red-500/10 hover:text-red-300 cursor-pointer"
-                  onClick={handleLogout}
-                >
-                  <LogOut className="w-4 h-4" />
-                  Keluar
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </SidebarMenuItem>
-        </SidebarMenu>
-      </SidebarFooter>
+      {/* Logout Confirmation Dialog */}
+      <Dialog open={showLogoutDialog} onOpenChange={setShowLogoutDialog}>
+        <DialogContent className="bg-slate-900 border-slate-700 sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="text-white flex items-center gap-2">
+              <AlertCircle className="w-5 h-5 text-amber-400" />
+              Konfirmasi Logout
+            </DialogTitle>
+            <DialogDescription className="text-slate-300">
+              Anda yakin ingin keluar dari aplikasi?
+            </DialogDescription>
+          </DialogHeader>
 
-      <SidebarRail />
-    </Sidebar>
+          <DialogFooter className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setShowLogoutDialog(false)}
+              disabled={isLoggingOut}
+              className="bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700"
+            >
+              Batal
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleLogoutConfirm}
+              disabled={isLoggingOut}
+              className="bg-red-600 hover:bg-red-700 text-white"
+            >
+              {isLoggingOut ? "Logging out..." : "Ya, Logout"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }

@@ -22,12 +22,13 @@ class Delivery extends Model
     protected function casts(): array
     {
         return [
-            'delivery_status'  => DeliveryStatus::class,
-            'latitude'         => 'decimal:8',
-            'longitude'        => 'decimal:8',
-            'delivery_fee'     => 'decimal:2',
-            'picked_up_at'     => 'datetime',
-            'delivered_at'     => 'datetime',
+            'delivery_status'       => DeliveryStatus::class,
+            'latitude'              => 'decimal:8',
+            'longitude'             => 'decimal:8',
+            'delivery_fee'          => 'decimal:2',
+            'picked_up_at'          => 'datetime',
+            'delivered_at'          => 'datetime',
+            'proof_image_timestamp' => 'datetime',
         ];
     }
 

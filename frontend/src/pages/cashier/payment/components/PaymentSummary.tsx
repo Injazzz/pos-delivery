@@ -68,25 +68,28 @@ export function PaymentSummary({ order }: { order: Order }) {
       </div>
 
       {/* Existing payment info (partial) */}
-      {order.payment && order.payment.status === "partial" && (
-        <div className="bg-orange-500/10 border border-orange-500/30 rounded-lg p-3 text-sm">
-          <p className="text-orange-400 font-medium mb-1">
-            Downpayment Tercatat
-          </p>
-          <div className="flex justify-between text-slate-400">
-            <span>Sudah dibayar</span>
-            <span className="text-white">
-              Rp {order.payment.amount_paid.toLocaleString("id-ID")}
-            </span>
+      {order.payment &&
+        order.payment.status === "partial" &&
+        order.payment.amount_paid != null && (
+          <div className="bg-orange-500/10 border border-orange-500/30 rounded-lg p-3 text-sm">
+            <p className="text-orange-400 font-medium mb-1">
+              Downpayment Tercatat
+            </p>
+            <div className="flex justify-between text-slate-400">
+              <span>Sudah dibayar</span>
+              <span className="text-white">
+                Rp {(order.payment.amount_paid || 0).toLocaleString("id-ID")}
+              </span>
+            </div>
+            <div className="flex justify-between mt-1">
+              <span className="text-slate-400">Sisa tagihan</span>
+              <span className="text-orange-400 font-bold">
+                Rp{" "}
+                {(order.payment.amount_remaining || 0).toLocaleString("id-ID")}
+              </span>
+            </div>
           </div>
-          <div className="flex justify-between mt-1">
-            <span className="text-slate-400">Sisa tagihan</span>
-            <span className="text-orange-400 font-bold">
-              Rp {order.payment.amount_remaining.toLocaleString("id-ID")}
-            </span>
-          </div>
-        </div>
-      )}
+        )}
 
       {/* Customer & type info */}
       <div className="flex gap-2 text-xs text-slate-500">

@@ -26,6 +26,8 @@ interface Props {
 }
 
 export function RevenueChart({ data, isLoading }: Props) {
+  const chartData = data ?? [];
+
   return (
     <Card className="bg-slate-900 border-slate-800">
       <CardHeader className="pb-2">
@@ -39,7 +41,7 @@ export function RevenueChart({ data, isLoading }: Props) {
         ) : (
           <ResponsiveContainer width="100%" height={220}>
             <AreaChart
-              data={data ?? []}
+              data={chartData}
               margin={{ top: 4, right: 4, bottom: 0, left: 0 }}
             >
               <defs>

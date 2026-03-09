@@ -60,7 +60,7 @@ class PaymentService
 
         return DB::transaction(function () use ($order, $dpAmount, $method) {
             $payment = $this->createOrUpdatePayment($order, [
-                'method'           => $method,
+                'method'           => PaymentMethod::Downpayment->value,
                 'status'           => 'partial',
                 'amount'           => $order->total_price,
                 'amount_paid'      => $dpAmount,

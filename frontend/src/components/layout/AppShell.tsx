@@ -1,27 +1,48 @@
+import { useEffect } from "react";
 import { Outlet } from "react-router-dom";
-import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
+import { useQueryClient } from "@tanstack/react-query";
 import { AppSidebar } from "./AppSidebar";
+import { OfflineBanner } from "@/components/shared/OfflineBanner";
+import { PWAInstallBanner } from "@/components/shared/PWAInstallBanner";
+import { PWAUpdatePrompt } from "@/components/shared/PWAUpdatePrompt";
+import { registerSyncListeners, cacheMenusForOffline } from "@/lib/offlineSync";
+import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { AppNavbar } from "./Navbar";
-import { useOrderEcho } from "@/hooks/useOrderEcho";
-import { useDeliveryEcho } from "@/hooks/useDeliveryEcho";
-import { useNotificationEcho } from "@/hooks/useNotificationEcho";
 
-export default function AppShell() {
-  useOrderEcho();
-  useDeliveryEcho();
-  useNotificationEcho();
+export function AppShell() {
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    // Cache menus saat pertama load (untuk offline fallback)
+    if (navigator.onLine) {
+      cacheMenusForOffline();
+    }
+
+    // Register background sync listener
+    const unregister = registerSyncListeners((result) => {
+      if (result.synced > 0) {
+        queryClient.invalidateQueries({ queryKey: ["orders"] });
+        queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+      }
+    });
+
+    return unregister;
+  }, [queryClient]);
 
   return (
     <SidebarProvider>
-      <div className="flex min-h-screen w-full bg-slate-950">
-        <AppSidebar />
-        <SidebarInset className="flex flex-col flex-1 min-w-0">
-          <AppNavbar />
-          <main className="flex-1 p-4 md:p-6 overflow-auto">
-            <Outlet />
-          </main>
-        </SidebarInset>
-      </div>
+      <AppSidebar />
+      <SidebarInset>
+        <AppNavbar />
+        <OfflineBanner />
+        <main className="flex-1 overflow-auto p-6">
+          <Outlet />
+        </main>
+      </SidebarInset>
+
+      {/* PWA Prompts */}
+      <PWAInstallBanner />
+      <PWAUpdatePrompt />
     </SidebarProvider>
   );
 }

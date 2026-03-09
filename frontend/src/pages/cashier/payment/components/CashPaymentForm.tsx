@@ -36,7 +36,8 @@ export function CashPaymentForm({ total, isLoading, onSubmit }: Props) {
             value={cashReceived}
             onChange={(e) => setCashReceived(e.target.value)}
             placeholder="0"
-            className="pl-9 bg-slate-800 border-slate-700 text-white text-lg font-bold h-12 focus:border-amber-500"
+            disabled={isLoading}
+            className="pl-9 bg-slate-800 border-slate-700 text-white text-lg font-bold h-12 focus:border-amber-500 disabled:opacity-50 disabled:cursor-not-allowed"
           />
         </div>
       </div>
@@ -52,7 +53,8 @@ export function CashPaymentForm({ total, isLoading, onSubmit }: Props) {
                 key={amount}
                 type="button"
                 onClick={() => handleQuick(amount)}
-                className="px-3 py-1.5 rounded-lg bg-slate-800 border border-slate-700 hover:border-amber-500/50 text-xs text-slate-300 hover:text-amber-400 transition-colors"
+                disabled={isLoading}
+                className="px-3 py-1.5 rounded-lg bg-slate-800 border border-slate-700 hover:border-amber-500/50 text-xs text-slate-300 hover:text-amber-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Rp {rounded.toLocaleString("id-ID")}
               </button>
