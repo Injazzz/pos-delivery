@@ -2,16 +2,19 @@
 
 namespace App\Http\Controllers\Api\Manager;
 
+use App\Enums\OrderStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
-use App\Models\Payment;
 use App\Models\OrderItem;
-use App\Enums\OrderStatus;
+use App\Models\Payment;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
 class ReportController extends Controller
 {
@@ -32,34 +35,43 @@ class ReportController extends Controller
             ->where('status', 'paid')
             ->get();
 
+        // Partial payments untuk track pending revenue
+        $partialPayments = Payment::whereBetween('created_at', [$from, $to])
+            ->where('status', 'partial')
+            ->get();
+
         // Previous period untuk growth calculation
-        $diff     = $from->diffInSeconds($to);
+        $diff = $from->diffInSeconds($to);
         $prevFrom = $from->copy()->subSeconds($diff + 1);
-        $prevTo   = $from->copy()->subSecond();
+        $prevTo = $from->copy()->subSecond();
 
         $prevRevenue = Payment::whereBetween('created_at', [$prevFrom, $prevTo])
             ->where('status', 'paid')
             ->sum('amount');
 
-        $revenue      = $payments->sum('amount');
+        $revenue = $payments->sum('amount');
+        $pendingRevenue = $partialPayments->sum('amount_remaining');
         $growthRevenue = $prevRevenue > 0
             ? round((($revenue - $prevRevenue) / $prevRevenue) * 100, 1)
             : null;
 
         return response()->json([
             'data' => [
-                'period'           => ['from' => $from->toDateString(), 'to' => $to->toDateString()],
-                'revenue'          => (float) $revenue,
-                'revenue_growth'   => $growthRevenue,
-                'orders_count'     => $orders->count(),
-                'avg_order_value'  => $orders->count() > 0
-                    ? round($revenue / $orders->count(), 0)
+                'period' => ['from' => $from->toDateString(), 'to' => $to->toDateString()],
+                'revenue' => (float) $revenue,
+                'revenue_pending' => (float) $pendingRevenue,
+                'revenue_growth' => $growthRevenue,
+                'orders_count' => $orders->count(),
+                'orders_paid' => $payments->count(),
+                'orders_partial' => $partialPayments->count(),
+                'avg_order_value' => $orders->count() > 0
+                    ? round(($revenue + $pendingRevenue) / $orders->count(), 0)
                     : 0,
                 'orders_by_status' => $orders
                     ->groupBy('status')
                     ->map->count()
                     ->toArray(),
-                'orders_by_type'   => $orders
+                'orders_by_type' => $orders
                     ->groupBy('order_type')
                     ->map->count()
                     ->toArray(),
@@ -77,21 +89,23 @@ class ReportController extends Controller
         [$from, $to] = $this->parseDateRange($request);
         $groupBy = $request->input('group_by', 'day');
 
-        $format = match($groupBy) {
+        $format = match ($groupBy) {
             'month' => '%Y-%m',
-            'week'  => '%Y-%u',
+            'week' => '%Y-%u',
             default => '%Y-%m-%d',
         };
 
         // Join dengan Orders untuk filter status yang konsisten dengan summary
+        // Include paid + partial (untuk mencocokkan total orders di summary)
         $rows = Payment::whereBetween('payments.created_at', [$from, $to])
-            ->where('payments.status', 'paid')
+            ->whereIn('payments.status', ['paid', 'partial'])
             ->join('orders', 'payments.order_id', '=', 'orders.id')
             ->whereNotIn('orders.status', [OrderStatus::Cancelled->value])
             ->select([
                 DB::raw("DATE_FORMAT(payments.created_at, '{$format}') as period"),
-                DB::raw('SUM(payments.amount) as revenue'),
+                DB::raw('SUM(CASE WHEN payments.status = "paid" THEN payments.amount ELSE 0 END) as revenue'),
                 DB::raw('COUNT(DISTINCT payments.order_id) as orders'),
+                DB::raw('SUM(CASE WHEN payments.status = "partial" THEN payments.amount_remaining ELSE 0 END) as pending_revenue'),
             ])
             ->groupBy('period')
             ->orderBy('period')
@@ -114,8 +128,7 @@ class ReportController extends Controller
         $limit = (int) $request->input('limit', 10);
 
         $menus = OrderItem::whereBetween('created_at', [$from, $to])
-            ->whereHas('order', fn($q) =>
-                $q->whereNotIn('status', [OrderStatus::Cancelled->value])
+            ->whereHas('order', fn ($q) => $q->whereIn('status', [OrderStatus::Delivered->value, OrderStatus::Ready->value])
             )
             ->select([
                 'menu_id',
@@ -128,14 +141,14 @@ class ReportController extends Controller
             ->orderByDesc('total_qty')
             ->limit($limit)
             ->get()
-            ->map(fn($item) => [
-                'menu_id'       => $item->menu_id,
-                'name'          => $item->menu?->name ?? 'Menu dihapus',
-                'category'      => $item->menu?->category ?? '-',
-                'price'         => (float) ($item->menu?->price ?? 0),
-                'total_qty'     => (int) $item->total_qty,
+            ->map(fn ($item) => [
+                'menu_id' => $item->menu_id,
+                'name' => $item->menu?->name ?? 'Menu dihapus',
+                'category' => $item->menu?->category ?? '-',
+                'price' => (float) ($item->menu?->price ?? 0),
+                'total_qty' => (int) $item->total_qty,
                 'total_revenue' => (float) $item->total_revenue,
-                'order_count'   => (int) $item->order_count,
+                'order_count' => (int) $item->order_count,
             ]);
 
         return response()->json(['data' => $menus]);
@@ -151,8 +164,7 @@ class ReportController extends Controller
         [$from, $to] = $this->parseDateRange($request);
 
         $rows = OrderItem::whereBetween('order_items.created_at', [$from, $to])
-            ->whereHas('order', fn($q) =>
-                $q->whereNotIn('status', [OrderStatus::Cancelled->value])
+            ->whereHas('order', fn ($q) => $q->whereNotIn('status', [OrderStatus::Cancelled->value])
             )
             ->join('menus', 'order_items.menu_id', '=', 'menus.id')
             ->select([
@@ -166,11 +178,11 @@ class ReportController extends Controller
 
         $totalRevenue = $rows->sum('total_revenue');
 
-        $data = $rows->map(fn($r) => [
-            'category'      => $r->category,
-            'total_qty'     => (int) $r->total_qty,
+        $data = $rows->map(fn ($r) => [
+            'category' => $r->category,
+            'total_qty' => (int) $r->total_qty,
             'total_revenue' => (float) $r->total_revenue,
-            'percentage'    => $totalRevenue > 0
+            'percentage' => $totalRevenue > 0
                 ? round(($r->total_revenue / $totalRevenue) * 100, 1)
                 : 0,
         ]);
@@ -201,18 +213,18 @@ class ReportController extends Controller
             ->get();
 
         $labels = [
-            'cash'        => 'Tunai',
-            'qris'        => 'QRIS',
-            'transfer'    => 'Transfer',
-            'midtrans'    => 'Midtrans',
+            'cash' => 'Tunai',
+            'qris' => 'QRIS',
+            'transfer' => 'Transfer',
+            'midtrans' => 'Midtrans',
             'downpayment' => 'DP',
         ];
 
-        $data = $rows->map(fn($r) => [
-            'method'  => $r->method->value,
-            'label'   => $labels[$r->method->value] ?? $r->method->value,
-            'count'   => (int) $r->count,
-            'total'   => (float) $r->total,
+        $data = $rows->map(fn ($r) => [
+            'method' => $r->method->value,
+            'label' => $labels[$r->method->value] ?? $r->method->value,
+            'count' => (int) $r->count,
+            'total' => (float) $r->total,
         ]);
 
         return response()->json(['data' => $data]);
@@ -228,35 +240,32 @@ class ReportController extends Controller
         [$from, $to] = $this->parseDateRange($request);
 
         $orders = Order::whereBetween('created_at', [$from, $to])
-            ->when($request->status, fn($q, $v) =>
-                $q->where('status', $v)
+            ->when($request->status, fn ($q, $v) => $q->where('status', $v)
             )
-            ->when($request->type, fn($q, $v) =>
-                $q->where('type', $v)
+            ->when($request->type, fn ($q, $v) => $q->where('type', $v)
             )
-            ->when($request->search, fn($q, $v) =>
-                $q->where('order_code', 'like', "%{$v}%")
+            ->when($request->search, fn ($q, $v) => $q->where('order_code', 'like', "%{$v}%")
             )
             ->with(['customer.user:id,name', 'cashier:id,name', 'payment'])
             ->latest()
             ->paginate($request->input('per_page', 20))
-            ->through(fn($o) => [
-                'id'           => $o->id,
-                'order_code'   => $o->order_code,
-                'type'         => $o->order_type->value,
-                'type_label'   => match($o->order_type->value) {
-                    'dine_in'  => 'Makan di Tempat',
+            ->through(fn ($o) => [
+                'id' => $o->id,
+                'order_code' => $o->order_code,
+                'type' => $o->order_type->value,
+                'type_label' => match ($o->order_type->value) {
+                    'dine_in' => 'Makan di Tempat',
                     'takeaway' => 'Bawa Pulang',
                     'delivery' => 'Delivery',
-                    default    => $o->order_type->value,
+                    default => $o->order_type->value,
                 },
-                'status'       => $o->status->value,
+                'status' => $o->status->value,
                 'status_label' => $o->status->label(),
-                'total'        => (float) $o->total_price,
-                'customer'     => $o->customer?->user->name ?? 'Walk-in',
-                'cashier'      => $o->cashier?->name ?? '-',
+                'total' => (float) $o->total_price,
+                'customer' => $o->customer?->user->name ?? 'Walk-in',
+                'cashier' => $o->cashier?->name ?? '-',
                 'payment_method' => $o->payment?->method?->value ?? '-',
-                'created_at'   => $o->created_at->toISOString(),
+                'created_at' => $o->created_at->toISOString(),
             ]);
 
         return response()->json($orders);
@@ -276,38 +285,106 @@ class ReportController extends Controller
             ->latest()
             ->get();
 
-        // Build CSV (simple, no external lib)
         $headers = [
             'No', 'Kode Order', 'Tanggal', 'Jenis', 'Status',
             'Customer', 'Kasir', 'Subtotal', 'Diskon', 'Total',
-            'Metode Bayar', 'Bayar', 'Kembalian',
+            'Metode Bayar', 'Bayar', 'Kembalian', 'Status Pembayaran', 'Pelunasan',
         ];
 
-        $rows = $orders->map(fn($o, $i) => [
-            $i + 1,
-            $o->order_code,
-            $o->created_at->format('d/m/Y H:i'),
-            $o->order_type->value,
-            $o->status->label(),
-            $o->customer?->user->name ?? 'Walk-in',
-            $o->cashier?->name ?? '-',
-            $o->subtotal,
-            $o->discount ?? 0,
-            $o->total_price,
-            $o->payment?->method?->value ?? '-',
-            $o->payment?->amount_paid ?? 0,
-            $o->payment?->change_amount ?? 0,
-        ]);
+        $rows = $orders->map(function ($o, $i) {
+            $paymentStatus = $o->payment?->status ?? '-';
+            $pelunasan = '-';
 
-        $csv  = implode(',', $headers) . "\n";
-        $csv .= $rows->map(fn($r) =>
-            implode(',', array_map(fn($v) => '"' . str_replace('"', '""', $v) . '"', $r))
-        )->implode("\n");
+            if ($o->payment && $o->payment->method?->value === 'downpayment' && $o->payment->status === 'partial') {
+                $pelunasan = $o->payment->amount_remaining ?? 0;
+            }
 
-        $filename = "laporan_{$from->format('Ymd')}_{$to->format('Ymd')}.csv";
+            return [
+                $i + 1,
+                $o->order_code,
+                $o->created_at->format('d/m/Y H:i'),
+                $o->order_type->value,
+                $o->status->label(),
+                $o->customer?->user->name ?? 'Walk-in',
+                $o->cashier?->name ?? '-',
+                $o->subtotal,
+                $o->discount ?? 0,
+                $o->total_price,
+                $o->payment?->method?->value ?? '-',
+                $o->payment?->amount_paid ?? 0,
+                $o->payment?->change_amount ?? 0,
+                $paymentStatus,
+                $pelunasan,
+            ];
+        });
 
-        return response($csv, 200, [
-            'Content-Type'        => 'text/csv; charset=UTF-8',
+        // Create spreadsheet dengan formatting
+        $spreadsheet = new Spreadsheet;
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('Laporan');
+
+        // Helper function to convert column number (0-based) to letter
+        $numberToColumn = function ($num) {
+            $num++;  // Convert to 1-based
+            $letter = '';
+            while ($num > 0) {
+                $num--;
+                $letter = chr($num % 26 + 65).$letter;
+                $num = floor($num / 26);
+            }
+
+            return $letter;
+        };
+
+        // Set header dengan formatting
+        foreach ($headers as $col => $header) {
+            $colLetter = $numberToColumn($col);
+            $cell = $sheet->getCell("{$colLetter}1");
+            $cell->setValue($header);
+
+            // Bold + background biru
+            $cell->getStyle()->getFont()->setBold(true);
+            $cell->getStyle()->getFont()->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color('FFFFFF'));
+            $cell->getStyle()->getFill()
+                ->setFillType(Fill::FILL_SOLID)
+                ->getStartColor()
+                ->setARGB('FF1E3A8A'); // Blue 900
+
+            // Center alignment
+            $cell->getStyle()->getAlignment()
+                ->setHorizontal(Alignment::HORIZONTAL_CENTER)
+                ->setVertical(Alignment::VERTICAL_CENTER);
+        }
+
+        // Set data rows
+        foreach ($rows as $rowIndex => $row) {
+            foreach ($row as $colIndex => $value) {
+                $colLetter = $numberToColumn($colIndex);
+                $cell = $sheet->getCell("{$colLetter}".($rowIndex + 2));
+                $cell->setValue($value);
+            }
+        }
+
+        // Auto width columns
+        foreach (range(0, count($headers) - 1) as $col) {
+            $colLetter = $numberToColumn($col);
+            $sheet->getColumnDimension($colLetter)->setAutoSize(true);
+        }
+
+        // Set row height untuk header
+        $sheet->getRowDimension(1)->setRowHeight(25);
+
+        // Create writer dan output
+        $writer = new Xlsx($spreadsheet);
+        $filename = "laporan_{$from->format('Ymd')}_{$to->format('Ymd')}.xlsx";
+
+        // Write to temp file
+        $tempFile = tempnam(sys_get_temp_dir(), 'xlsx');
+        $writer->save($tempFile);
+
+        // Return file sebagai response
+        return response()->download($tempFile, $filename, [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
             'Content-Disposition' => "attachment; filename=\"{$filename}\"",
         ]);
     }
@@ -328,11 +405,11 @@ class ReportController extends Controller
 
         return response()->json([
             'data' => [
-                'period'          => ['from' => $from->toDateString(), 'to' => $to->toDateString()],
-                'summary'         => $summaryData,
-                'top_menus'       => $topMenusData,
+                'period' => ['from' => $from->toDateString(), 'to' => $to->toDateString()],
+                'summary' => $summaryData,
+                'top_menus' => $topMenusData,
                 'payment_methods' => $paymentData,
-                'generated_at'    => now()->toISOString(),
+                'generated_at' => now()->toISOString(),
             ],
         ]);
     }
@@ -340,7 +417,7 @@ class ReportController extends Controller
     /**
      * GET /api/manager/orders/{order}/receipt
      * Reprint struk untuk manager (sudah ada di Module 9)
-    */
+     */
     public function receipt(Order $order): JsonResponse
     {
         $order->load(['customer.user', 'items.menu', 'payment', 'cashier']);
@@ -356,16 +433,16 @@ class ReportController extends Controller
     {
         $period = $request->input('period', 'today');
 
-        return match($period) {
-            'today'   => [Carbon::today(), Carbon::today()->endOfDay()],
-            'week'    => [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()],
-            'month'   => [Carbon::now()->startOfMonth(), Carbon::now()->endOfMonth()],
-            'year'    => [Carbon::now()->startOfYear(), Carbon::now()->endOfYear()],
-            'custom'  => [
+        return match ($period) {
+            'today' => [Carbon::today(), Carbon::today()->endOfDay()],
+            'week' => [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()],
+            'month' => [Carbon::now()->startOfMonth(), Carbon::now()->endOfMonth()],
+            'year' => [Carbon::now()->startOfYear(), Carbon::now()->endOfYear()],
+            'custom' => [
                 Carbon::parse($request->input('from', today()))->startOfDay(),
                 Carbon::parse($request->input('to', today()))->endOfDay(),
             ],
-            default   => [Carbon::today(), Carbon::today()->endOfDay()],
+            default => [Carbon::today(), Carbon::today()->endOfDay()],
         };
     }
 
@@ -376,27 +453,28 @@ class ReportController extends Controller
         $current = $from->copy();
 
         while ($current->lte($to)) {
-            $key = match($groupBy) {
+            $key = match ($groupBy) {
                 'month' => $current->format('Y-m'),
-                'week'  => $current->format('Y-W'),
+                'week' => $current->format('Y-W'),
                 default => $current->format('Y-m-d'),
             };
 
             $rowData = $map->get($key) ?? [];
             $result[] = [
-                'period'  => $key,
-                'label'   => match($groupBy) {
+                'period' => $key,
+                'label' => match ($groupBy) {
                     'month' => $current->translatedFormat('M Y'),
-                    'week'  => 'Minggu ' . $current->format('W'),
+                    'week' => 'Minggu '.$current->format('W'),
                     default => $current->translatedFormat('d M'),
                 },
                 'revenue' => (float) ($rowData['revenue'] ?? 0),
-                'orders'  => (int)   ($rowData['orders']  ?? 0),
+                'pending_revenue' => (float) ($rowData['pending_revenue'] ?? 0),
+                'orders' => (int) ($rowData['orders'] ?? 0),
             ];
 
-            match($groupBy) {
+            match ($groupBy) {
                 'month' => $current->addMonth(),
-                'week'  => $current->addWeek(),
+                'week' => $current->addWeek(),
                 default => $current->addDay(),
             };
         }

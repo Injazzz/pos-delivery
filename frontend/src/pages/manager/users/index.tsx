@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Plus } from "lucide-react";
+import { UserPlus, Users2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 import { usersApi } from "@/api/users";
@@ -99,8 +99,11 @@ export default function UsersPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-white">Manajemen Pengguna</h1>
-          <p className="text-slate-400 text-sm mt-1">
+          <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
+            <Users2 className="w-6 h-6 text-amber-400" />
+            Manajemen Pengguna
+          </h1>
+          <p className="text-muted-foreground text-sm mt-1">
             Kelola semua akun pengguna sistem
           </p>
         </div>
@@ -108,7 +111,7 @@ export default function UsersPage() {
           onClick={() => setCreateOpen(true)}
           className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-semibold gap-2 self-start sm:self-auto"
         >
-          <Plus className="w-4 h-4" />
+          <UserPlus className="w-4 h-4" />
           Tambah Pengguna
         </Button>
       </div>

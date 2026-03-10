@@ -44,10 +44,10 @@ export function ReviewDialog({ order, onClose }: Props) {
 
   return (
     <Dialog open={!!order} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="bg-slate-900 border-slate-700 sm:max-w-sm">
+      <DialogContent className="bg-card border-border sm:max-w-sm">
         <DialogHeader>
-          <DialogTitle className="text-white">Beri Ulasan</DialogTitle>
-          <DialogDescription className="text-slate-400">
+          <DialogTitle className="text-foreground">Beri Ulasan</DialogTitle>
+          <DialogDescription className="text-muted-foreground">
             Pesanan #{order.order_code}
           </DialogDescription>
         </DialogHeader>
@@ -55,7 +55,7 @@ export function ReviewDialog({ order, onClose }: Props) {
         <div className="space-y-4 py-2">
           {/* Star rating */}
           <div className="flex flex-col items-center gap-3">
-            <p className="text-sm text-slate-400">
+            <p className="text-sm text-muted-foreground">
               Seberapa puas dengan pesanan ini?
             </p>
             <div className="flex gap-1">
@@ -72,14 +72,14 @@ export function ReviewDialog({ order, onClose }: Props) {
                     className={cn(
                       "w-8 h-8 transition-colors",
                       star <= (hovered || rating)
-                        ? "fill-amber-400 text-amber-400"
-                        : "text-slate-700",
+                        ? "fill-accent text-accent"
+                        : "text-muted/50",
                     )}
                   />
                 </button>
               ))}
             </div>
-            <p className="text-sm font-medium text-white">
+            <p className="text-sm font-medium text-foreground">
               {
                 ["", "Sangat Kecewa", "Kecewa", "Cukup", "Puas", "Sangat Puas"][
                   hovered || rating
@@ -94,20 +94,20 @@ export function ReviewDialog({ order, onClose }: Props) {
             value={comment}
             onChange={(e) => setComment(e.target.value)}
             rows={3}
-            className="bg-slate-800 border-slate-700 text-white placeholder:text-slate-500 resize-none"
+            className="bg-input border-border text-foreground placeholder:text-muted-foreground resize-none"
           />
         </div>
 
         <DialogFooter>
           <Button
             variant="outline"
-            className="border-slate-700 text-slate-300 hover:bg-slate-800"
+            className="border-border text-foreground hover:bg-muted"
             onClick={onClose}
           >
             Batal
           </Button>
           <Button
-            className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-semibold"
+            className="bg-accent hover:bg-accent/90 text-accent-foreground font-semibold"
             disabled={mutation.isPending}
             onClick={() => mutation.mutate()}
           >

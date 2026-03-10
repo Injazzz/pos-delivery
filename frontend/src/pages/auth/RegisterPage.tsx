@@ -79,22 +79,24 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-950 px-4 py-8">
+    <div className="min-h-screen flex items-center justify-center bg-background px-4 py-8">
       <div className="w-full max-w-md space-y-6">
         <div className="text-center space-y-2">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-amber-500 shadow-lg shadow-amber-500/30">
-            <UtensilsCrossed className="w-7 h-7 text-slate-950" />
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-primary shadow-lg shadow-primary/30">
+            <UtensilsCrossed className="w-7 h-7 text-primary-foreground" />
           </div>
-          <h1 className="text-2xl font-bold text-white tracking-tight">
+          <h1 className="text-2xl font-bold text-foreground tracking-tight">
             POS Delivery
           </h1>
-          <p className="text-slate-400 text-sm">Buat akun pelanggan baru</p>
+          <p className="text-muted-foreground text-sm">
+            Buat akun pelanggan baru
+          </p>
         </div>
 
-        <Card className="bg-slate-900 border-slate-800 shadow-2xl">
+        <Card className="bg-card border-border shadow-2xl">
           <CardHeader className="pb-4">
-            <CardTitle className="text-white text-lg">Daftar</CardTitle>
-            <CardDescription className="text-slate-400">
+            <CardTitle className="text-foreground text-lg">Daftar</CardTitle>
+            <CardDescription className="text-muted-foreground">
               Isi data diri Anda untuk membuat akun
             </CardDescription>
           </CardHeader>
@@ -134,18 +136,18 @@ export default function RegisterPage() {
                 },
               ].map((field) => (
                 <div key={field.id} className="space-y-1.5">
-                  <Label htmlFor={field.id} className="text-slate-300">
+                  <Label htmlFor={field.id} className="text-foreground">
                     {field.label}
                   </Label>
                   <Input
                     id={field.id}
                     type={field.type}
                     placeholder={field.placeholder}
-                    className="bg-slate-800 border-slate-700 text-white placeholder:text-slate-500 focus:border-amber-500 focus:ring-amber-500/20"
+                    className="bg-input border-border text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-primary/20"
                     {...register(field.id as keyof RegisterForm)}
                   />
                   {errors[field.id as keyof RegisterForm] && (
-                    <p className="text-red-400 text-xs">
+                    <p className="text-destructive text-xs">
                       {errors[field.id as keyof RegisterForm]?.message}
                     </p>
                   )}
@@ -153,21 +155,21 @@ export default function RegisterPage() {
               ))}
             </CardContent>
 
-            <CardFooter className="flex flex-col gap-3">
+            <CardFooter className="flex flex-col gap-3 mt-5">
               <Button
                 type="submit"
                 disabled={isLoading}
-                className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-semibold"
+                className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold"
               >
                 {isLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                 {isLoading ? "Mendaftarkan..." : "Daftar Sekarang"}
               </Button>
 
-              <p className="text-slate-400 text-sm text-center">
+              <p className="text-muted-foreground text-sm text-center">
                 Sudah punya akun?{" "}
                 <Link
                   to="/login"
-                  className="text-amber-500 hover:text-amber-400 font-medium"
+                  className="text-primary hover:text-primary/90 font-medium"
                 >
                   Masuk
                 </Link>

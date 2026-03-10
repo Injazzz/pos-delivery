@@ -74,21 +74,21 @@ export default function ResetPasswordPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-950 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-background px-4">
       <div className="w-full max-w-md space-y-6">
         <div className="text-center space-y-2">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-amber-500 shadow-lg shadow-amber-500/30">
-            <UtensilsCrossed className="w-7 h-7 text-slate-950" />
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-primary shadow-lg shadow-primary/30">
+            <UtensilsCrossed className="w-7 h-7 text-primary-foreground" />
           </div>
-          <h1 className="text-2xl font-bold text-white">Reset Password</h1>
+          <h1 className="text-2xl font-bold text-foreground">Reset Password</h1>
         </div>
-        <Card className="bg-slate-900 border-slate-800">
+        <Card className="bg-card border-border\">
           <form onSubmit={handleSubmit(onSubmit)}>
             <CardHeader>
-              <CardTitle className="text-white text-lg">
+              <CardTitle className="text-foreground text-lg">
                 Password Baru
               </CardTitle>
-              <CardDescription className="text-slate-400">
+              <CardDescription className="text-muted-foreground">
                 Masukkan password baru Anda
               </CardDescription>
             </CardHeader>
@@ -98,26 +98,26 @@ export default function ResetPasswordPage() {
                 { id: "password_confirmation", label: "Konfirmasi Password" },
               ].map((f) => (
                 <div key={f.id} className="space-y-1.5">
-                  <Label className="text-slate-300">{f.label}</Label>
+                  <Label className="text-foreground/80">{f.label}</Label>
                   <Input
                     type="password"
                     placeholder="••••••••"
-                    className="bg-slate-800 border-slate-700 text-white placeholder:text-slate-500 focus:border-amber-500"
+                    className="bg-input border-border text-foreground placeholder:text-muted-foreground focus:border-primary"
                     {...register(f.id as keyof Form)}
                   />
                   {errors[f.id as keyof Form] && (
-                    <p className="text-red-400 text-xs">
+                    <p className="text-destructive text-xs">
                       {errors[f.id as keyof Form]?.message}
                     </p>
                   )}
                 </div>
               ))}
             </CardContent>
-            <CardFooter>
+            <CardFooter className="mt-5">
               <Button
                 type="submit"
                 disabled={isLoading}
-                className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-semibold"
+                className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold"
               >
                 {isLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                 Simpan Password Baru
@@ -128,7 +128,7 @@ export default function ResetPasswordPage() {
         <div className="text-center">
           <Link
             to="/login"
-            className="inline-flex items-center gap-1.5 text-sm text-slate-400 hover:text-amber-400"
+            className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary"
           >
             <ArrowLeft className="w-4 h-4" /> Kembali ke Login
           </Link>

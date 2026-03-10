@@ -45,8 +45,8 @@ import CustomerOrdersPage from "@/pages/customer/orders";
 import NotificationsPage from "@/pages/shared/notifications";
 
 // ─── Misc ─────────────────────────────────────────────────────────────────────
-import UnauthorizedPage from "@/pages/Unauthorized";
-import NotFoundPage from "@/pages/NotFound";
+import UnauthorizedPage from "@/pages/shared/Unauthorized";
+import NotFoundPage from "@/pages/shared/NotFound";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 function ManagerOnly({ children }: { children: React.ReactNode }) {

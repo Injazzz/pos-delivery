@@ -61,11 +61,11 @@ export default function ManagerOrders() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-white flex items-center gap-2">
+        <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
           <ClipboardList className="w-6 h-6 text-amber-400" />
           Semua Pesanan
         </h1>
-        <p className="text-slate-400 text-sm mt-1">
+        <p className="text-muted-foreground text-sm mt-1">
           Monitor dan kelola semua pesanan masuk
         </p>
       </div>

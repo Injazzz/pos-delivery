@@ -47,50 +47,50 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-950 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-background px-4">
       <div className="w-full max-w-md space-y-6">
         <div className="text-center space-y-2">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-amber-500 shadow-lg shadow-amber-500/30">
-            <UtensilsCrossed className="w-7 h-7 text-slate-950" />
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-primary shadow-lg shadow-primary/30">
+            <UtensilsCrossed className="w-7 h-7 text-primary-foreground" />
           </div>
-          <h1 className="text-2xl font-bold text-white">Lupa Password</h1>
-          <p className="text-slate-400 text-sm">
+          <h1 className="text-2xl font-bold text-foreground">Lupa Password</h1>
+          <p className="text-muted-foreground text-sm">
             Masukkan email untuk reset password
           </p>
         </div>
 
-        <Card className="bg-slate-900 border-slate-800">
+        <Card className="bg-card border-border">
           {!sent ? (
             <form onSubmit={handleSubmit(onSubmit)}>
               <CardHeader>
-                <CardTitle className="text-white text-lg">
+                <CardTitle className="text-foreground text-lg">
                   Reset Password
                 </CardTitle>
-                <CardDescription className="text-slate-400">
+                <CardDescription className="text-muted-foreground">
                   Link reset akan dikirim ke email Anda
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-1.5">
-                  <Label className="text-slate-300">Email</Label>
+                  <Label className="text-foreground/80">Email</Label>
                   <Input
                     type="email"
                     placeholder="email@contoh.com"
-                    className="bg-slate-800 border-slate-700 text-white placeholder:text-slate-500 focus:border-amber-500"
+                    className="bg-input border-border text-foreground placeholder:text-muted-foreground focus:border-primary"
                     {...register("email")}
                   />
                   {errors.email && (
-                    <p className="text-red-400 text-xs">
+                    <p className="text-destructive text-xs">
                       {errors.email.message}
                     </p>
                   )}
                 </div>
               </CardContent>
-              <CardFooter className="flex flex-col gap-3">
+              <CardFooter className="flex flex-col gap-3 mt-5">
                 <Button
                   type="submit"
                   disabled={isLoading}
-                  className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-semibold"
+                  className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold"
                 >
                   {isLoading && (
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -104,8 +104,8 @@ export default function ForgotPasswordPage() {
               <div className="w-12 h-12 bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto">
                 <span className="text-2xl">✉️</span>
               </div>
-              <p className="text-white font-medium">Email terkirim!</p>
-              <p className="text-slate-400 text-sm">
+              <p className="text-foreground font-medium">Email terkirim!</p>
+              <p className="text-muted-foreground text-sm">
                 Cek inbox Anda dan ikuti instruksi reset password.
               </p>
             </CardContent>
@@ -115,7 +115,7 @@ export default function ForgotPasswordPage() {
         <div className="text-center">
           <Link
             to="/login"
-            className="inline-flex items-center gap-1.5 text-sm text-slate-400 hover:text-amber-400 transition-colors"
+            className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary transition-colors"
           >
             <ArrowLeft className="w-4 h-4" /> Kembali ke Login
           </Link>

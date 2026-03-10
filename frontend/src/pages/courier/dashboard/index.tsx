@@ -28,8 +28,10 @@ export default function CourierDashboard() {
   return (
     <div className="space-y-6 max-w-lg mx-auto">
       <div>
-        <h1 className="text-2xl font-bold text-white">Dashboard Kurir</h1>
-        <p className="text-slate-400 text-sm mt-1">Pengiriman Anda hari ini</p>
+        <h1 className="text-2xl font-bold text-foreground">Dashboard Kurir</h1>
+        <p className="text-muted-foreground text-sm mt-1">
+          Pengiriman Anda hari ini
+        </p>
       </div>
 
       {/* Stats */}
@@ -39,7 +41,7 @@ export default function CourierDashboard() {
             label: "Aktif",
             value: active.length,
             icon: Bike,
-            color: "text-amber-400",
+            color: "text-accent",
           },
           {
             label: "Selesai",
@@ -54,18 +56,18 @@ export default function CourierDashboard() {
               (d: any) => d.delivery_status === "pending",
             ).length,
             icon: Clock,
-            color: "text-slate-400",
+            color: "text-muted-foreground",
           },
         ].map((s) => (
-          <Card key={s.label} className="bg-slate-900 border-slate-800">
+          <Card key={s.label} className="bg-card border-border">
             <CardContent className="p-3 text-center">
               <s.icon className={`w-5 h-5 mx-auto mb-1 ${s.color}`} />
               {isLoading ? (
-                <Skeleton className="h-6 w-6 bg-slate-800 mx-auto" />
+                <Skeleton className="h-6 w-6 bg-muted mx-auto" />
               ) : (
-                <p className="text-xl font-bold text-white">{s.value}</p>
+                <p className="text-xl font-bold text-foreground">{s.value}</p>
               )}
-              <p className="text-[10px] text-slate-500">{s.label}</p>
+              <p className="text-[10px] text-muted-foreground">{s.label}</p>
             </CardContent>
           </Card>
         ))}
@@ -74,31 +76,31 @@ export default function CourierDashboard() {
       {/* Active deliveries */}
       {active.length > 0 && (
         <div>
-          <p className="text-sm font-semibold text-slate-300 mb-3 flex items-center gap-2">
-            <Bike className="w-4 h-4 text-amber-400" /> Pengiriman Aktif
+          <p className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+            <Bike className="w-4 h-4 text-accent" /> Pengiriman Aktif
           </p>
           <div className="space-y-2">
             {active.map((delivery: any) => (
               <div
                 key={delivery.id}
-                onClick={() => navigate(`/courier/delivery/${delivery.id}`)}
-                className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 cursor-pointer hover:bg-amber-500/15 transition-colors"
+                onClick={() => navigate(`/courier/deliveries/${delivery.id}`)}
+                className="bg-accent/10 border border-accent/30 rounded-xl p-4 cursor-pointer hover:bg-accent/15 transition-colors"
               >
                 <div className="flex items-center justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="text-sm font-bold text-white">
+                    <p className="text-sm font-bold text-foreground">
                       {delivery.order?.order_code}
                     </p>
-                    <p className="text-xs text-slate-400 truncate mt-0.5">
+                    <p className="text-xs text-muted-foreground truncate mt-0.5">
                       {delivery.address}
                     </p>
-                    <p className="text-xs text-amber-400 mt-1">
+                    <p className="text-xs text-accent mt-1">
                       {delivery.order?.customer}
                     </p>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
                     <DeliveryStatusBadge status={delivery.delivery_status} />
-                    <ChevronRight className="w-4 h-4 text-slate-500" />
+                    <ChevronRight className="w-4 h-4 text-muted-foreground" />
                   </div>
                 </div>
               </div>
@@ -109,7 +111,7 @@ export default function CourierDashboard() {
 
       {/* No active deliveries */}
       {!isLoading && active.length === 0 && (
-        <div className="flex flex-col items-center gap-3 py-12 text-slate-500">
+        <div className="flex flex-col items-center gap-3 py-12 text-muted-foreground">
           <Bike className="w-10 h-10" />
           <p className="text-sm">Tidak ada pengiriman aktif</p>
           <p className="text-xs">Tunggu penugasan dari manager</p>
@@ -119,7 +121,7 @@ export default function CourierDashboard() {
       {/* History */}
       {history.length > 0 && (
         <div>
-          <p className="text-sm font-semibold text-slate-400 mb-3">
+          <p className="text-sm font-semibold text-muted-foreground mb-3">
             Riwayat Hari Ini
           </p>
           <div className="space-y-2">
@@ -127,19 +129,19 @@ export default function CourierDashboard() {
               <div
                 key={delivery.id}
                 onClick={() => navigate(`/courier/deliveries/${delivery.id}`)}
-                className="bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 flex items-center justify-between gap-3 cursor-pointer hover:border-slate-700 transition-colors"
+                className="bg-card border border-border rounded-xl px-4 py-3 flex items-center justify-between gap-3 cursor-pointer hover:border-border/80 transition-colors"
               >
                 <div className="min-w-0">
-                  <p className="text-sm font-semibold text-white">
+                  <p className="text-sm font-semibold text-foreground">
                     {delivery.order?.order_code}
                   </p>
-                  <p className="text-xs text-slate-500 truncate">
+                  <p className="text-xs text-muted-foreground truncate">
                     {delivery.address}
                   </p>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
                   <DeliveryStatusBadge status={delivery.delivery_status} />
-                  <ChevronRight className="w-4 h-4 text-slate-500" />
+                  <ChevronRight className="w-4 h-4 text-muted-foreground" />
                 </div>
               </div>
             ))}

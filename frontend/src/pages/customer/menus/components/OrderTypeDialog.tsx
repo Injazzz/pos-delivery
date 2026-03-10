@@ -79,10 +79,12 @@ export function OrderTypeDialog({
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="bg-slate-900 border-slate-700 sm:max-w-sm">
+      <DialogContent className="bg-card border-border sm:max-w-sm">
         <DialogHeader>
-          <DialogTitle className="text-white">Pilih Tipe Pesanan</DialogTitle>
-          <DialogDescription className="text-slate-400">
+          <DialogTitle className="text-foreground">
+            Pilih Tipe Pesanan
+          </DialogTitle>
+          <DialogDescription className="text-muted-foreground">
             Bagaimana Anda ingin menikmati pesanan?
           </DialogDescription>
         </DialogHeader>
@@ -98,29 +100,29 @@ export function OrderTypeDialog({
                 className={cn(
                   "flex flex-col items-center gap-2 p-3 rounded-xl border text-center transition-all",
                   localType === t.value
-                    ? "bg-amber-500/10 border-amber-500"
-                    : "bg-slate-800 border-slate-700 hover:border-slate-600",
+                    ? "bg-accent/10 border-accent"
+                    : "bg-muted border-border hover:border-border/80",
                 )}
               >
                 <div
                   className={cn(
                     "w-9 h-9 rounded-lg flex items-center justify-center",
-                    localType === t.value ? "bg-amber-500/20" : "bg-slate-700",
+                    localType === t.value ? "bg-accent/20" : "bg-muted",
                   )}
                 >
                   <t.icon
                     className={cn(
                       "w-5 h-5",
                       localType === t.value
-                        ? "text-amber-400"
-                        : "text-slate-400",
+                        ? "text-accent"
+                        : "text-muted-foreground",
                     )}
                   />
                 </div>
                 <p
                   className={cn(
                     "text-[10px] font-semibold leading-tight",
-                    localType === t.value ? "text-amber-400" : "text-white",
+                    localType === t.value ? "text-accent" : "text-foreground",
                   )}
                 >
                   {t.label}
@@ -132,14 +134,14 @@ export function OrderTypeDialog({
           {/* Dine-in: table number */}
           {localType === "dine_in" && (
             <div className="space-y-1.5">
-              <Label className="text-slate-300 text-sm">
-                Nomor Meja <span className="text-red-400">*</span>
+              <Label className="text-muted-foreground text-sm">
+                Nomor Meja <span className="text-primary">*</span>
               </Label>
               <Input
                 value={tableNumber}
                 onChange={(e) => setTableNumber(e.target.value)}
                 placeholder="Contoh: A1, B3, VIP-1"
-                className="bg-slate-800 border-slate-700 text-white placeholder:text-slate-500 focus:border-amber-500"
+                className="bg-card border-border text-foreground placeholder:text-muted-foreground focus:border-accent"
               />
             </div>
           )}
@@ -148,8 +150,8 @@ export function OrderTypeDialog({
           {localType === "delivery" && (
             <div className="space-y-3">
               <div className="space-y-1.5">
-                <Label className="text-slate-300 text-sm">
-                  Alamat Pengiriman <span className="text-red-400">*</span>
+                <Label className="text-muted-foreground text-sm">
+                  Alamat Pengiriman <span className="text-primary">*</span>
                 </Label>
                 <Input
                   value={deliveryAddress}
@@ -157,22 +159,22 @@ export function OrderTypeDialog({
                     setDeliveryInfo({ deliveryAddress: e.target.value })
                   }
                   placeholder="Jalan, Nomor, RT/RW, Kelurahan"
-                  className="bg-slate-800 border-slate-700 text-white placeholder:text-slate-500 focus:border-amber-500"
+                  className="bg-card border-border text-foreground placeholder:text-muted-foreground focus:border-accent"
                 />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-slate-300 text-sm">Kota</Label>
+                <Label className="text-muted-foreground text-sm">Kota</Label>
                 <Input
                   value={deliveryCity}
                   onChange={(e) =>
                     setDeliveryInfo({ deliveryCity: e.target.value })
                   }
                   placeholder="Nama kota"
-                  className="bg-slate-800 border-slate-700 text-white placeholder:text-slate-500 focus:border-amber-500"
+                  className="bg-card border-border text-foreground placeholder:text-muted-foreground focus:border-accent"
                 />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-slate-300 text-sm">
+                <Label className="text-muted-foreground text-sm">
                   Catatan Pengiriman
                 </Label>
                 <Input
@@ -181,7 +183,7 @@ export function OrderTypeDialog({
                     setDeliveryInfo({ deliveryNotes: e.target.value })
                   }
                   placeholder="Patokan, lantai, dll (opsional)"
-                  className="bg-slate-800 border-slate-700 text-white placeholder:text-slate-500 focus:border-amber-500"
+                  className="bg-input border-border text-foreground placeholder:text-muted-foreground focus:border-accent"
                 />
               </div>
             </div>
@@ -191,13 +193,13 @@ export function OrderTypeDialog({
         <DialogFooter className="gap-2">
           <Button
             variant="outline"
-            className="border-slate-700 text-slate-300 hover:bg-slate-800"
+            className="border-border text-foreground hover:bg-muted"
             onClick={onClose}
           >
             Batal
           </Button>
           <Button
-            className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-semibold"
+            className="bg-accent hover:bg-accent/90 text-accent-foreground font-semibold"
             disabled={!isValid || isLoading}
             onClick={handleConfirm}
           >

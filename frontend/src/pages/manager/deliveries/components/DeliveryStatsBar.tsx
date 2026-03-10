@@ -9,27 +9,42 @@ const STATS = [
     key: "pending",
     label: "Menunggu Kurir",
     icon: Clock,
-    color: "text-slate-400",
+    iconBg: "bg-glow-500/10",
+    iconColor: "text-glow-500",
+    valueColor: "text-glow-500",
   },
   {
     key: "assigned",
     label: "Kurir Ditugaskan",
     icon: UserCheck,
-    color: "text-blue-400",
+    iconBg: "bg-heart-500/10",
+    iconColor: "text-heart-500",
+    valueColor: "text-heart-500",
   },
   {
     key: "on_way",
     label: "Dalam Perjalanan",
     icon: Bike,
-    color: "text-violet-400",
+    iconBg: "bg-earth-500/10",
+    iconColor: "text-earth-500",
+    valueColor: "text-earth-500",
   },
   {
     key: "delivered",
     label: "Terkirim",
     icon: CheckCircle,
-    color: "text-emerald-400",
+    iconBg: "bg-emerald-500/10",
+    iconColor: "text-emerald-500",
+    valueColor: "text-emerald-500",
   },
-  { key: "failed", label: "Gagal", icon: XCircle, color: "text-red-400" },
+  {
+    key: "failed",
+    label: "Gagal",
+    icon: XCircle,
+    iconBg: "bg-destructive/10",
+    iconColor: "text-destructive",
+    valueColor: "text-destructive",
+  },
 ];
 
 export function DeliveryStatsBar({
@@ -42,22 +57,45 @@ export function DeliveryStatsBar({
   return (
     <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
       {STATS.map((s) => (
-        <Card key={s.key} className="bg-slate-900 border-slate-800">
-          <CardContent className="p-3 flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center shrink-0">
-              <s.icon className={cn("w-4 h-4", s.color)} />
-            </div>
-            <div>
-              {isLoading ? (
-                <Skeleton className="h-5 w-6 bg-slate-800" />
-              ) : (
-                <p className="text-lg font-bold text-white leading-none">
-                  {summary?.[s.key as keyof DeliverySummary] ?? 0}
-                </p>
-              )}
-              <p className="text-[10px] text-slate-500 mt-0.5 leading-tight">
-                {s.label}
-              </p>
+        <Card
+          key={s.key}
+          className="bg-card border-border overflow-hidden hover:shadow-md hover:shadow-heart-500/5 transition-all group"
+        >
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              {/* Icon dengan background */}
+              <div
+                className={cn(
+                  "w-10 h-10 rounded-lg flex items-center justify-center shrink-0 transition-transform group-hover:scale-110",
+                  s.iconBg,
+                )}
+              >
+                <s.icon className={cn("w-5 h-5", s.iconColor)} />
+              </div>
+
+              {/* Content */}
+              <div className="flex-1 min-w-0">
+                {isLoading ? (
+                  <>
+                    <Skeleton className="h-6 w-12 bg-muted mb-1" />
+                    <Skeleton className="h-3 w-16 bg-muted" />
+                  </>
+                ) : (
+                  <>
+                    <p
+                      className={cn(
+                        "text-xl font-bold leading-none",
+                        s.valueColor,
+                      )}
+                    >
+                      {summary?.[s.key as keyof DeliverySummary] ?? 0}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1 leading-tight">
+                      {s.label}
+                    </p>
+                  </>
+                )}
+              </div>
             </div>
           </CardContent>
         </Card>

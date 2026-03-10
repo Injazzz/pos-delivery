@@ -41,19 +41,19 @@ export default function CustomerOrders() {
   return (
     <div className="space-y-5">
       <div>
-        <h1 className="text-2xl font-bold text-white">Pesanan Saya</h1>
-        <p className="text-slate-400 text-sm mt-1">
+        <h1 className="text-2xl font-bold text-foreground">Pesanan Saya</h1>
+        <p className="text-muted-foreground text-sm mt-1">
           Riwayat dan status pesanan Anda
         </p>
       </div>
 
       <Tabs value={activeStatus} onValueChange={setActiveStatus}>
-        <TabsList className="bg-slate-900 border border-slate-800 h-9 p-1">
+        <TabsList className="bg-card border border-border h-9 p-1">
           {TABS.map((tab) => (
             <TabsTrigger
               key={tab.value}
               value={tab.value}
-              className="text-xs data-[state=active]:bg-amber-500 data-[state=active]:text-slate-950 data-[state=active]:font-semibold text-slate-400"
+              className="text-xs data-[state=active]:bg-accent data-[state=active]:text-accent-foreground data-[state=active]:font-semibold text-muted-foreground"
             >
               {tab.label}
             </TabsTrigger>
@@ -68,10 +68,10 @@ export default function CustomerOrders() {
           >
             {isLoading &&
               Array.from({ length: 4 }).map((_, i) => (
-                <Skeleton key={i} className="h-24 bg-slate-800 rounded-xl" />
+                <Skeleton key={i} className="h-24 bg-muted rounded-xl" />
               ))}
             {!isLoading && (data?.data ?? []).length === 0 && (
-              <div className="flex flex-col items-center gap-3 py-16 text-slate-500">
+              <div className="flex flex-col items-center gap-3 py-16 text-muted-foreground">
                 <ClipboardList className="w-8 h-8" />
                 <p className="text-sm">Belum ada pesanan</p>
               </div>

@@ -33,43 +33,45 @@ export default function CourierAssignedPage() {
     <div className="space-y-6 pb-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-white">Pesanan Ditugaskan</h1>
-        <p className="text-slate-400 text-sm mt-1">
+        <h1 className="text-2xl font-bold text-foreground">
+          Pesanan Ditugaskan
+        </h1>
+        <p className="text-muted-foreground text-sm mt-1">
           Daftar pesanan yang sedang diproses atau dalam perjalanan
         </p>
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-2 gap-3">
-        <Card className="bg-slate-900 border-slate-800">
+        <Card className="bg-card border-border">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs text-slate-500 uppercase tracking-wider font-medium">
-                  Menunggu Diambil
+                <p className="text-xs text-muted-foreground uppercase tracking-wider font-medium">
+                  Dipilih
                 </p>
                 {isLoading ? (
-                  <Skeleton className="h-8 w-12 bg-slate-800 mt-1" />
+                  <Skeleton className="h-8 w-12 bg-muted mt-1" />
                 ) : (
-                  <p className="text-2xl font-bold text-amber-400 mt-1">
+                  <p className="text-2xl font-bold text-primary mt-1">
                     {pending.length}
                   </p>
                 )}
               </div>
-              <Clock className="w-6 h-6 text-amber-400/50" />
+              <Clock className="w-6 h-6 text-primary/50" />
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-slate-900 border-slate-800">
+        <Card className="bg-card border-border">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs text-slate-500 uppercase tracking-wider font-medium">
+                <p className="text-xs text-muted-foreground uppercase tracking-wider font-medium">
                   Dalam Perjalanan
                 </p>
                 {isLoading ? (
-                  <Skeleton className="h-8 w-12 bg-slate-800 mt-1" />
+                  <Skeleton className="h-8 w-12 bg-muted mt-1" />
                 ) : (
                   <p className="text-2xl font-bold text-violet-400 mt-1">
                     {inProgress.length}
@@ -86,23 +88,25 @@ export default function CourierAssignedPage() {
       {isLoading ? (
         <div className="space-y-3">
           {[1, 2, 3].map((i) => (
-            <Card key={i} className="bg-slate-900 border-slate-800">
+            <Card key={i} className="bg-card border-border">
               <CardContent className="p-4 space-y-3">
-                <Skeleton className="h-6 w-32 bg-slate-800" />
-                <Skeleton className="h-4 w-48 bg-slate-800" />
+                <Skeleton className="h-6 w-32 bg-muted" />
+                <Skeleton className="h-4 w-48 bg-muted" />
               </CardContent>
             </Card>
           ))}
         </div>
       ) : assigned.length === 0 ? (
-        <Card className="bg-slate-900 border-slate-800">
+        <Card className="bg-card border-border">
           <CardContent className="p-8 text-center">
-            <Bike className="w-12 h-12 text-slate-700 mx-auto mb-3" />
-            <p className="text-slate-400 font-medium">
+            <Bike className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
+            <p className="text-muted-foreground font-medium">
+              {" "}
               Tidak ada pesanan yang ditugaskan
             </p>
-            <p className="text-slate-500 text-sm mt-1">
-              Kembali ke dashboard untuk melihat informasi terbaru
+            <p className="text-muted-foreground text-sm mt-1">
+              {" "}
+              Kembali ke dashboard untuk melihat informasi terbaru{" "}
             </p>
             <Button
               variant="outline"
@@ -119,7 +123,7 @@ export default function CourierAssignedPage() {
           {/* Pending section */}
           {pending.length > 0 && (
             <div>
-              <p className="text-xs font-semibold text-amber-400 mb-2 flex items-center gap-2 px-1">
+              <p className="text-xs font-semibold text-primary mb-2 flex items-center gap-2 px-1">
                 <Clock className="w-3 h-3" /> MENUNGGU DIAMBIL ({pending.length}
                 )
               </p>
@@ -172,14 +176,14 @@ function DeliveryCard({
 }) {
   return (
     <button onClick={onNavigate} className="w-full text-left">
-      <Card className="bg-slate-900 border-slate-800 hover:border-slate-700 hover:bg-slate-800/50 transition-all cursor-pointer group">
+      <Card className="bg-card border-border hover:border-primary/30 hover:bg-card/80 transition-all cursor-pointer group">
         <CardContent className="p-4">
           <div className="flex items-start justify-between gap-3 mb-3">
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-white group-hover:text-amber-400 transition-colors truncate">
+              <p className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors truncate">
                 {delivery.order?.order_code}
               </p>
-              <p className="text-xs text-slate-500 mt-0.5">
+              <p className="text-xs text-muted-foreground mt-0.5">
                 {delivery.order?.customer || "Walk-in"}
               </p>
             </div>
@@ -188,23 +192,23 @@ function DeliveryCard({
 
           {/* Address */}
           <div className="flex gap-2 mb-3">
-            <MapPin className="w-4 h-4 text-slate-500 shrink-0 mt-0.5" />
-            <p className="text-sm text-slate-300 line-clamp-2">
+            <MapPin className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" />
+            <p className="text-sm text-foreground/80 line-clamp-2">
               {delivery.address}
             </p>
           </div>
 
           {/* Phone */}
           <div className="flex gap-2 mb-3">
-            <Phone className="w-4 h-4 text-slate-500 shrink-0" />
-            <p className="text-sm text-slate-300">
+            <Phone className="w-4 h-4 text-muted-foreground shrink-0" />
+            <p className="text-sm text-foreground/80">
               {delivery.order?.customer_phone || "-"}
             </p>
           </div>
 
           {/* Items count and fee */}
-          <div className="flex items-center justify-between pt-2 border-t border-slate-800">
-            <div className="flex items-center gap-1 text-slate-400">
+          <div className="flex items-center justify-between pt-2 border-t border-border">
+            <div className="flex items-center gap-1 text-muted-foreground">
               <Package className="w-3 h-3" />
               <p className="text-xs">
                 {delivery.order?.items_count || 0} item

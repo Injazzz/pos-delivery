@@ -30,7 +30,7 @@ export default function CourierDeliveryDetailPage() {
   if (isNaN(id) || id <= 0) {
     return (
       <div className="flex flex-col items-center justify-center h-64 gap-4">
-        <p className="text-slate-400">Delivery ID tidak valid</p>
+        <p className="text-muted-foreground">Delivery ID tidak valid</p>
         <Button
           variant="outline"
           onClick={() => navigate("/courier/dashboard")}
@@ -44,7 +44,7 @@ export default function CourierDeliveryDetailPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Loader2 className="w-8 h-8 animate-spin text-amber-500" />
+        <Loader2 className="w-8 h-8 animate-spin text-accent" />
       </div>
     );
   }
@@ -52,7 +52,7 @@ export default function CourierDeliveryDetailPage() {
   if (!data) {
     return (
       <div className="flex flex-col items-center justify-center h-64 gap-4">
-        <p className="text-slate-400">Data pengiriman tidak ditemukan</p>
+        <p className="text-muted-foreground">Data pengiriman tidak ditemukan</p>
         <Button
           variant="outline"
           onClick={() => navigate("/courier/dashboard")}
@@ -70,16 +70,16 @@ export default function CourierDeliveryDetailPage() {
         <Button
           variant="ghost"
           size="icon"
-          className="text-slate-400 hover:text-white hover:bg-slate-800"
+          className="text-muted-foreground hover:text-foreground hover:bg-muted"
           onClick={() => navigate("/courier/dashboard")}
         >
           <ArrowLeft className="w-5 h-5" />
         </Button>
         <div>
-          <h1 className="text-lg font-bold text-white">
+          <h1 className="text-lg font-bold text-foreground">
             {data.order?.order_code}
           </h1>
-          <p className="text-slate-400 text-xs">Detail Pengiriman</p>
+          <p className="text-muted-foreground text-xs">Detail Pengiriman</p>
         </div>
         <div className="ml-auto">
           <DeliveryStatusBadge status={data.delivery_status} />
@@ -87,20 +87,24 @@ export default function CourierDeliveryDetailPage() {
       </div>
 
       {/* Customer info */}
-      <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 space-y-3">
-        <p className="text-xs text-slate-500 uppercase tracking-wider font-medium">
+      <div className="bg-card border border-border rounded-xl p-4 space-y-3">
+        <p className="text-xs text-muted-foreground uppercase tracking-wider font-medium">
           Info Pelanggan
         </p>
         <div className="flex items-start gap-3">
-          <MapPin className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+          <MapPin className="w-4 h-4 text-accent shrink-0 mt-0.5" />
           <div className="flex-1">
-            <p className="text-sm font-medium text-white">
+            <p className="text-sm font-medium text-foreground">
               {data.order?.customer}
             </p>
-            <p className="text-xs text-slate-400 mt-0.5">{data.address}</p>
-            {data.city && <p className="text-xs text-slate-500">{data.city}</p>}
+            <p className="text-xs text-muted-foreground mt-0.5">
+              {data.address}
+            </p>
+            {data.city && (
+              <p className="text-xs text-muted-foreground/70">{data.city}</p>
+            )}
             {data.delivery_notes && (
-              <p className="text-xs text-amber-400 mt-1 italic">
+              <p className="text-xs text-accent mt-1 italic">
                 📝 {data.delivery_notes}
               </p>
             )}
@@ -129,11 +133,11 @@ export default function CourierDeliveryDetailPage() {
       </div>
 
       {/* Order items */}
-      <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
-        <p className="text-xs text-slate-500 uppercase tracking-wider font-medium mb-3">
+      <div className="bg-card border border-border rounded-xl p-4">
+        <p className="text-xs text-muted-foreground uppercase tracking-wider font-medium mb-3">
           Item Pesanan ({data.order?.items_count} item)
         </p>
-        <div className="flex items-center gap-2 text-slate-400">
+        <div className="flex items-center gap-2 text-muted-foreground">
           <Package className="w-4 h-4" />
           <span className="text-sm">{data.order?.total}</span>
         </div>
@@ -147,11 +151,11 @@ export default function CourierDeliveryDetailPage() {
 
       {/* Proof photo display */}
       {data.proof_image_url && (
-        <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
-          <p className="text-xs text-slate-500 uppercase tracking-wider font-medium mb-3">
+        <div className="bg-card border border-border rounded-xl p-4">
+          <p className="text-xs text-muted-foreground uppercase tracking-wider font-medium mb-3">
             Foto Bukti
           </p>
-          <div className="rounded-xl overflow-hidden border border-slate-700">
+          <div className="rounded-xl overflow-hidden border border-border">
             <img
               src={data.proof_image_url}
               alt="Bukti pengiriman"

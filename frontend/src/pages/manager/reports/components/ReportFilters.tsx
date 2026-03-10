@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { Input } from "@/components/ui/input";
+import { Calendar } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { ReportFilters, ReportPeriod } from "@/types/report";
 
@@ -20,19 +21,19 @@ interface Props {
 
 export function ReportFilters({ filters, onChange, isLoading }: Props) {
   return (
-    <div className="flex flex-wrap items-center gap-2">
+    <div className="flex flex-wrap items-center gap-3 bg-card border border-border rounded-lg p-3">
       {/* Period tabs */}
-      <div className="flex bg-slate-800 rounded-xl p-1 gap-0.5">
+      <div className="flex bg-muted/50 rounded-lg p-1 gap-0.5 border border-border">
         {PERIODS.map((p) => (
           <button
             key={p.value}
             type="button"
             onClick={() => onChange({ ...filters, period: p.value })}
             className={cn(
-              "px-3 py-1.5 rounded-lg text-xs font-medium transition-all",
+              "px-3 py-1.5 rounded-md text-xs font-medium transition-all",
               filters.period === p.value
-                ? "bg-amber-500 text-slate-950 shadow font-bold"
-                : "text-slate-400 hover:text-white",
+                ? "bg-heart-500 text-white shadow-sm"
+                : "text-muted-foreground hover:text-foreground hover:bg-muted",
             )}
           >
             {p.label}
@@ -43,23 +44,29 @@ export function ReportFilters({ filters, onChange, isLoading }: Props) {
       {/* Custom date range */}
       {filters.period === "custom" && (
         <div className="flex items-center gap-2">
-          <Input
-            type="date"
-            value={filters.from ?? ""}
-            onChange={(e) => onChange({ ...filters, from: e.target.value })}
-            className="h-8 w-36 text-xs bg-slate-800 border-slate-700 text-white"
-          />
-          <span className="text-slate-500 text-xs">s/d</span>
-          <Input
-            type="date"
-            value={filters.to ?? ""}
-            onChange={(e) => onChange({ ...filters, to: e.target.value })}
-            className="h-8 w-36 text-xs bg-slate-800 border-slate-700 text-white"
-          />
+          <div className="relative">
+            <Calendar className="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+            <Input
+              type="date"
+              value={filters.from ?? ""}
+              onChange={(e) => onChange({ ...filters, from: e.target.value })}
+              className="h-8 w-36 pl-8 text-xs bg-background border-border text-foreground"
+            />
+          </div>
+          <span className="text-muted-foreground text-xs">s/d</span>
+          <div className="relative">
+            <Calendar className="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+            <Input
+              type="date"
+              value={filters.to ?? ""}
+              onChange={(e) => onChange({ ...filters, to: e.target.value })}
+              className="h-8 w-36 pl-8 text-xs bg-background border-border text-foreground"
+            />
+          </div>
         </div>
       )}
 
-      {/* Group by (untuk chart) */}
+      {/* Group by */}
       {(filters.period === "month" ||
         filters.period === "year" ||
         filters.period === "custom") && (
@@ -68,7 +75,7 @@ export function ReportFilters({ filters, onChange, isLoading }: Props) {
           onChange={(e) =>
             onChange({ ...filters, group_by: e.target.value as any })
           }
-          className="h-8 text-xs bg-slate-800 border border-slate-700 text-slate-300 rounded-lg px-2"
+          className="h-8 text-xs bg-background border border-border text-foreground rounded-md px-2 focus:border-heart-500 focus:ring-1 focus:ring-heart-500/20 outline-none"
         >
           <option value="day">Per Hari</option>
           <option value="week">Per Minggu</option>
@@ -76,8 +83,12 @@ export function ReportFilters({ filters, onChange, isLoading }: Props) {
         </select>
       )}
 
+      {/* Loading indicator */}
       {isLoading && (
-        <div className="w-4 h-4 border-2 border-amber-500 border-t-transparent rounded-full animate-spin ml-1" />
+        <div className="flex items-center gap-1 ml-auto">
+          <div className="w-3.5 h-3.5 border-2 border-heart-500 border-t-transparent rounded-full animate-spin" />
+          <span className="text-[10px] text-muted-foreground">Loading...</span>
+        </div>
       )}
     </div>
   );

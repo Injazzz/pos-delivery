@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Plus } from "lucide-react";
+import { Plus, UtensilsCrossed } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 import { menusApi } from "@/api/menus";
@@ -84,8 +84,11 @@ export default function ManagerMenus() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-white">Manajemen Menu</h1>
-          <p className="text-slate-400 text-sm mt-1">
+          <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
+            <UtensilsCrossed className="w-6 h-6 text-amber-400" />
+            Manajemen Menu
+          </h1>
+          <p className="text-muted-foreground text-sm mt-1">
             Kelola daftar makanan dan minuman
           </p>
         </div>

@@ -27,8 +27,8 @@ export function OrderTimeline({ order }: { order: Order }) {
   return (
     <div className="space-y-1">
       {isCancelled ? (
-        <div className="flex items-center gap-2 p-3 rounded-lg bg-red-500/10 border border-red-500/20">
-          <span className="text-red-400 text-sm font-medium">
+        <div className="flex items-center gap-2 p-3 rounded-lg bg-destructive/10 border border-destructive/20">
+          <span className="text-destructive text-sm font-medium">
             ✕ Pesanan Dibatalkan
           </span>
         </div>
@@ -50,17 +50,19 @@ export function OrderTimeline({ order }: { order: Order }) {
                     isDone
                       ? "bg-emerald-500"
                       : isCurrent
-                        ? "bg-amber-500"
-                        : "bg-slate-800 border border-slate-700",
+                        ? "bg-accent"
+                        : "bg-muted border border-border",
                   )}
                 >
                   {isDone ? (
-                    <CheckCircle className="w-3.5 h-3.5 text-white" />
+                    <CheckCircle className="w-3.5 h-3.5 text-foreground" />
                   ) : (
                     <Circle
                       className={cn(
                         "w-3 h-3",
-                        isCurrent ? "text-slate-950" : "text-slate-600",
+                        isCurrent
+                          ? "text-accent-foreground"
+                          : "text-muted-foreground",
                       )}
                     />
                   )}
@@ -69,7 +71,7 @@ export function OrderTimeline({ order }: { order: Order }) {
                   <div
                     className={cn(
                       "w-0.5 h-6 mt-1",
-                      isDone ? "bg-emerald-500/40" : "bg-slate-800",
+                      isDone ? "bg-emerald-500/40" : "bg-muted",
                     )}
                   />
                 )}
@@ -80,13 +82,15 @@ export function OrderTimeline({ order }: { order: Order }) {
                 <p
                   className={cn(
                     "text-sm font-medium",
-                    isDone || isCurrent ? "text-white" : "text-slate-600",
+                    isDone || isCurrent
+                      ? "text-foreground"
+                      : "text-muted-foreground",
                   )}
                 >
                   {step.label}
                 </p>
                 {log && (
-                  <p className="text-xs text-slate-500 mt-0.5">
+                  <p className="text-xs text-muted-foreground mt-0.5">
                     {new Date(log.updated_at).toLocaleString("id-ID", {
                       day: "2-digit",
                       month: "short",

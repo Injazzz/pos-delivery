@@ -92,7 +92,7 @@ export function useOfflineOrder() {
     ): Promise<CreateOrderReturn> => {
       const result = await mutation.mutateAsync(payload);
       return {
-        orderId: (result as Record<string, unknown>).id,
+        orderId: String((result as any).id),
         isOffline: (result as OfflineOrderResult).isOffline ?? false,
       };
     },

@@ -40,7 +40,7 @@ export function RedirectIfAuth({ children }: { children: React.ReactNode }) {
     const map: Record<string, string> = {
       manager: "/manager/dashboard",
       kasir: "/cashier/dashboard",
-      kurir: "/courier/deliveries",
+      kurir: "/courier/dashboard",
       pelanggan: "/menu",
     };
     return <Navigate to={map[user.role] ?? "/"} replace />;

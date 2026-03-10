@@ -69,8 +69,8 @@ export default function CustomerMenuDetailPage() {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-          <p className="text-white font-semibold">Menu tidak ditemukan</p>
+          <AlertCircle className="w-12 h-12 text-destructive mx-auto mb-4" />
+          <p className="text-foreground font-semibold">Menu tidak ditemukan</p>
         </div>
       </div>
     );
@@ -83,13 +83,13 @@ export default function CustomerMenuDetailPage() {
           variant="ghost"
           size="sm"
           onClick={() => navigate("/menu")}
-          className="text-slate-400 hover:text-white gap-1"
+          className="text-muted-foreground hover:text-foreground gap-1"
         >
           <ChevronLeft className="w-4 h-4" />
           Kembali
         </Button>
-        <Skeleton className="w-full h-96 bg-slate-800 rounded-xl" />
-        <Skeleton className="w-full h-20 bg-slate-800 rounded-lg" />
+        <Skeleton className="w-full h-96 bg-muted rounded-xl" />
+        <Skeleton className="w-full h-20 bg-muted rounded-lg" />
       </div>
     );
   }
@@ -98,8 +98,10 @@ export default function CustomerMenuDetailPage() {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-          <p className="text-white font-semibold">Gagal memuat detail menu</p>
+          <AlertCircle className="w-12 h-12 text-destructive mx-auto mb-4" />
+          <p className="text-foreground font-semibold">
+            Gagal memuat detail menu
+          </p>
         </div>
       </div>
     );
@@ -117,7 +119,7 @@ export default function CustomerMenuDetailPage() {
         variant="ghost"
         size="sm"
         onClick={() => navigate("/menu")}
-        className="text-slate-400 hover:text-white gap-1"
+        className="text-muted-foreground hover:text-foreground gap-1"
       >
         <ChevronLeft className="w-4 h-4" />
         Kembali ke Menu
@@ -125,7 +127,7 @@ export default function CustomerMenuDetailPage() {
 
       {/* Image Gallery */}
       <div className="space-y-3">
-        <div className="relative w-full bg-slate-800 rounded-xl overflow-hidden aspect-video">
+        <div className="relative w-full bg-muted rounded-xl overflow-hidden aspect-video">
           {displayImage ? (
             <img
               src={displayImage}
@@ -133,13 +135,15 @@ export default function CustomerMenuDetailPage() {
               className="w-full h-full object-cover"
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center bg-slate-700">
-              <span className="text-slate-500">Tidak ada gambar</span>
+            <div className="w-full h-full flex items-center justify-center bg-muted/80">
+              <span className="text-muted-foreground">Tidak ada gambar</span>
             </div>
           )}
           {!menu.is_available && (
             <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-              <span className="text-white font-semibold">Tidak Tersedia</span>
+              <span className="text-foreground font-semibold">
+                Tidak Tersedia
+              </span>
             </div>
           )}
         </div>
@@ -152,9 +156,7 @@ export default function CustomerMenuDetailPage() {
                 key={idx}
                 onClick={() => setSelectedImageIndex(idx)}
                 className={`h-16 w-16 rounded-lg overflow-hidden shrink-0 border-2 transition-colors ${
-                  selectedImageIndex === idx
-                    ? "border-amber-500"
-                    : "border-slate-700"
+                  selectedImageIndex === idx ? "border-accent" : "border-border"
                 }`}
               >
                 <img
@@ -172,23 +174,25 @@ export default function CustomerMenuDetailPage() {
       <div className="space-y-2">
         <div className="flex items-start justify-between">
           <div className="flex-1">
-            <h1 className="text-2xl font-bold text-white">{menu.name}</h1>
-            <p className="text-xs text-slate-500 mt-1">{menu.category}</p>
+            <h1 className="text-2xl font-bold text-foreground">{menu.name}</h1>
+            <p className="text-xs text-muted-foreground mt-1">
+              {menu.category}
+            </p>
           </div>
         </div>
 
         {menu.description && (
-          <p className="text-slate-300 text-sm leading-relaxed">
+          <p className="text-foreground/80 text-sm leading-relaxed">
             {menu.description}
           </p>
         )}
 
         <div className="flex items-center justify-between pt-2">
-          <span className="text-2xl font-bold text-amber-400">
+          <span className="text-2xl font-bold text-accent">
             {menu.formatted_price}
           </span>
           {menu.preparation_time && (
-            <span className="text-xs text-slate-400">
+            <span className="text-xs text-muted-foreground">
               ⏱ {menu.preparation_time} menit
             </span>
           )}
@@ -196,7 +200,7 @@ export default function CustomerMenuDetailPage() {
 
         {/* Stock Info */}
         {menu.stock !== null && (
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-muted-foreground">
             Stok: {menu.stock > 0 ? `${menu.stock} tersedia` : "Habis"}
           </p>
         )}
@@ -204,17 +208,17 @@ export default function CustomerMenuDetailPage() {
 
       {/* Quantity Selector */}
       {canAddToOrder && (
-        <div className="space-y-4 pt-4 border-t border-slate-700">
+        <div className="space-y-4 pt-4 border-t border-border">
           <div className="flex items-center justify-between">
-            <span className="text-slate-300">Jumlah</span>
-            <div className="flex items-center gap-3 bg-slate-800 rounded-lg p-2">
+            <span className="text-foreground">Jumlah</span>
+            <div className="flex items-center gap-3 bg-muted rounded-lg p-2">
               <button
                 onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                className="p-1 hover:bg-slate-700 rounded transition-colors"
+                className="p-1 hover:bg-muted/80 rounded transition-colors"
               >
-                <Minus className="w-4 h-4 text-slate-300" />
+                <Minus className="w-4 h-4 text-foreground" />
               </button>
-              <span className="w-8 text-center font-semibold text-white">
+              <span className="w-8 text-center font-semibold text-foreground">
                 {quantity}
               </span>
               <button
@@ -223,16 +227,16 @@ export default function CustomerMenuDetailPage() {
                     !menu.stock || q < menu.stock ? q + 1 : q,
                   )
                 }
-                className="p-1 hover:bg-slate-700 rounded transition-colors"
+                className="p-1 hover:bg-muted/80 rounded transition-colors"
               >
-                <Plus className="w-4 h-4 text-slate-300" />
+                <Plus className="w-4 h-4 text-foreground" />
               </button>
             </div>
           </div>
 
           {/* Add to Order Button */}
           <Button
-            className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-semibold h-12 gap-2"
+            className="w-full bg-accent hover:bg-accent/90 text-accent-foreground font-semibold h-12 gap-2"
             onClick={() => addToOrderMutation.mutate()}
             disabled={addToOrderMutation.isPending}
           >
@@ -245,8 +249,8 @@ export default function CustomerMenuDetailPage() {
       )}
 
       {!canAddToOrder && (
-        <div className="bg-red-500/10 border border-red-500/30 rounded-lg px-4 py-3">
-          <p className="text-sm text-red-400">
+        <div className="bg-destructive/10 border border-destructive/30 rounded-lg px-4 py-3">
+          <p className="text-sm text-destructive">
             Menu ini tidak tersedia untuk dipesan
           </p>
         </div>

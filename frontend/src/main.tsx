@@ -7,6 +7,7 @@ import { Toaster } from "sonner";
 import { AppRouter } from "./router";
 import "./index.css";
 import { TooltipProvider } from "./components/ui/tooltip";
+import { ThemeProvider } from "./components/shared/ThemeProvider";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -24,21 +25,23 @@ const queryClient = new QueryClient({
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider delayDuration={300}>
-        <AppRouter />
-        <Toaster
-          position="top-right"
-          richColors
-          theme="dark"
-          toastOptions={{
-            style: {
-              background: "#1e293b",
-              border: "1px solid #334155",
-              color: "#f1f5f9",
-            },
-          }}
-        />
-      </TooltipProvider>
+      <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+        <TooltipProvider delayDuration={300}>
+          <AppRouter />
+          <Toaster
+            position="top-right"
+            richColors
+            theme="dark"
+            toastOptions={{
+              style: {
+                background: "#0f172a",
+                border: "1px solid #1e293b",
+                color: "#f1f5f9",
+              },
+            }}
+          />
+        </TooltipProvider>
+      </ThemeProvider>
     </QueryClientProvider>
   </StrictMode>,
 );

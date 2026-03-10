@@ -64,9 +64,9 @@ export function ProofPhotoCapture({ delivery, open, onClose }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && handleClose()}>
-      <DialogContent className="bg-slate-900 border-slate-700 sm:max-w-sm">
+      <DialogContent className="bg-card border-border sm:max-w-sm">
         <DialogHeader>
-          <DialogTitle className="text-white">
+          <DialogTitle className="text-foreground">
             Foto Bukti Pengiriman
           </DialogTitle>
         </DialogHeader>
@@ -78,7 +78,7 @@ export function ProofPhotoCapture({ delivery, open, onClose }: Props) {
 
           {/* Preview area */}
           {preview ? (
-            <div className="relative rounded-xl overflow-hidden border border-slate-700">
+            <div className="relative rounded-xl overflow-hidden border border-border">
               <img
                 src={preview}
                 alt="Preview"
@@ -87,7 +87,7 @@ export function ProofPhotoCapture({ delivery, open, onClose }: Props) {
 
               {/* Simulated watermark overlay */}
               <div className="absolute bottom-0 left-0 right-0 bg-black/65 px-3 py-2">
-                <p className="text-white text-xs font-mono">{now}</p>
+                <p className="text-foreground text-xs font-mono">{now}</p>
                 <p className="text-yellow-400 text-[10px] font-mono">
                   Order #{delivery.order?.order_code}
                 </p>
@@ -102,7 +102,7 @@ export function ProofPhotoCapture({ delivery, open, onClose }: Props) {
                 }}
                 className="absolute top-2 right-2 w-7 h-7 bg-black/60 rounded-full flex items-center justify-center hover:bg-black/80 transition-colors"
               >
-                <X className="w-3.5 h-3.5 text-white" />
+                <X className="w-3.5 h-3.5 text-foreground" />
               </button>
             </div>
           ) : (
@@ -111,20 +111,20 @@ export function ProofPhotoCapture({ delivery, open, onClose }: Props) {
               <button
                 type="button"
                 onClick={() => cameraRef.current?.click()}
-                className="flex flex-col items-center gap-2 p-6 rounded-xl border-2 border-dashed border-slate-700 hover:border-amber-500/50 transition-colors bg-slate-800/50"
+                className="flex flex-col items-center gap-2 p-6 rounded-xl border-2 border-dashed border-border hover:border-accent/50 transition-colors bg-muted/50"
               >
-                <Camera className="w-8 h-8 text-amber-400" />
-                <span className="text-xs text-slate-400">Kamera</span>
+                <Camera className="w-8 h-8 text-accent" />
+                <span className="text-xs text-muted-foreground">Kamera</span>
               </button>
 
               {/* Gallery pick */}
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="flex flex-col items-center gap-2 p-6 rounded-xl border-2 border-dashed border-slate-700 hover:border-amber-500/50 transition-colors bg-slate-800/50"
+                className="flex flex-col items-center gap-2 p-6 rounded-xl border-2 border-dashed border-border hover:border-accent/50 transition-colors bg-muted/50"
               >
-                <Upload className="w-8 h-8 text-slate-400" />
-                <span className="text-xs text-slate-400">Galeri</span>
+                <Upload className="w-8 h-8 text-muted-foreground" />
+                <span className="text-xs text-muted-foreground">Galeri</span>
               </button>
             </div>
           )}
@@ -154,7 +154,7 @@ export function ProofPhotoCapture({ delivery, open, onClose }: Props) {
           <div className="flex gap-2">
             <Button
               variant="outline"
-              className="flex-1 border-slate-700 text-slate-300 hover:bg-slate-800"
+              className="flex-1 border-border text-foreground hover:bg-muted"
               onClick={handleClose}
             >
               Batal
@@ -163,7 +163,7 @@ export function ProofPhotoCapture({ delivery, open, onClose }: Props) {
               <>
                 <Button
                   variant="outline"
-                  className="border-slate-700 text-slate-400 hover:bg-slate-800"
+                  className="border-border text-foreground hover:bg-muted"
                   onClick={() => {
                     setPreview(null);
                     setFile(null);
@@ -172,7 +172,7 @@ export function ProofPhotoCapture({ delivery, open, onClose }: Props) {
                   <RefreshCw className="w-4 h-4" />
                 </Button>
                 <Button
-                  className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold gap-2"
+                  className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-emerald-50 font-bold gap-2"
                   disabled={mutation.isPending}
                   onClick={() => file && mutation.mutate(file)}
                 >

@@ -8,9 +8,11 @@ import { PWAUpdatePrompt } from "@/components/shared/PWAUpdatePrompt";
 import { registerSyncListeners, cacheMenusForOffline } from "@/lib/offlineSync";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { AppNavbar } from "./Navbar";
+import { useEchoConnection } from "@/hooks/useEchoConnection";
 
 export function AppShell() {
   const queryClient = useQueryClient();
+  useEchoConnection(); // Initialize global connection state tracking
 
   useEffect(() => {
     // Cache menus saat pertama load (untuk offline fallback)

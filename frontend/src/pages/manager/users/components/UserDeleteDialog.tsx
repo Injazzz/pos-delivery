@@ -9,6 +9,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import type { User } from "@/types/user";
+import { AlertTriangle, Loader2 } from "lucide-react";
 
 interface Props {
   user: User | null;
@@ -25,29 +26,58 @@ export function UserDeleteDialog({
 }: Props) {
   return (
     <AlertDialog open={!!user} onOpenChange={(v) => !v && onOpenChange(false)}>
-      <AlertDialogContent className="bg-slate-900 border-slate-700">
+      <AlertDialogContent className="bg-card border-border max-w-md">
         <AlertDialogHeader>
-          <AlertDialogTitle className="text-white">
-            Hapus Pengguna?
-          </AlertDialogTitle>
-          <AlertDialogDescription className="text-slate-400">
-            Akun <span className="text-white font-medium">{user?.name}</span>{" "}
-            akan dihapus secara permanen. Tindakan ini tidak dapat dibatalkan.
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-10 h-10 rounded-full bg-destructive/20 flex items-center justify-center">
+              <AlertTriangle className="w-5 h-5 text-destructive" />
+            </div>
+            <div>
+              <AlertDialogTitle className="text-foreground text-lg">
+                Hapus Pengguna?
+              </AlertDialogTitle>
+            </div>
+          </div>
+
+          <AlertDialogDescription className="text-muted-foreground text-sm leading-relaxed">
+            Akun{" "}
+            <span className="font-semibold text-foreground bg-muted px-1.5 py-0.5 rounded">
+              {user?.name}
+            </span>{" "}
+            akan dihapus secara permanen dari sistem.
+            <br />
+            <span className="block mt-2 text-xs">Tindakan ini akan:</span>
           </AlertDialogDescription>
+
+          <ul className="text-xs text-muted-foreground list-disc list-inside mt-1 space-y-1">
+            <li>Menghapus semua data pengguna</li>
+            <li>Membatalkan sesi login yang aktif</li>
+            <li>Tidak dapat dikembalikan atau dipulihkan</li>
+          </ul>
         </AlertDialogHeader>
-        <AlertDialogFooter>
+
+        <AlertDialogFooter className="gap-2 sm:gap-0">
           <AlertDialogCancel
-            className="bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700"
+            className="bg-muted border-border text-foreground hover:bg-muted/80 hover:text-foreground transition-all"
             onClick={() => onOpenChange(false)}
+            disabled={isLoading}
           >
             Batal
           </AlertDialogCancel>
+
           <AlertDialogAction
-            className="bg-red-600 hover:bg-red-500 text-white"
+            className="bg-destructive hover:bg-destructive/90 text-destructive-foreground transition-all min-w-25"
             disabled={isLoading}
             onClick={() => user && onConfirm(user.id)}
           >
-            {isLoading ? "Menghapus..." : "Ya, Hapus"}
+            {isLoading ? (
+              <div className="flex items-center gap-2">
+                <Loader2 className="w-4 h-4 animate-spin" />
+                <span>Menghapus...</span>
+              </div>
+            ) : (
+              "Ya, Hapus"
+            )}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

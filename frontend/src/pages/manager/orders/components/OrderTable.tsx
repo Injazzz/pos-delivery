@@ -1,14 +1,44 @@
-import { Eye, RefreshCw, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  Eye,
+  RefreshCw,
+  ChevronLeft,
+  ChevronRight,
+  Store,
+  Package,
+  Bike,
+  type LucideIcon,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { OrderStatusBadge } from "@/components/shared/OrderStatusBadge";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import type { Order } from "@/types/order";
+import { cn } from "@/lib/utils";
 
 const TYPE_LABEL: Record<string, string> = {
-  dine_in: "Makan",
-  take_away: "Bawa",
+  dine_in: "Makan di Tempat",
+  take_away: "Bawa Pulang",
   delivery: "Delivery",
+};
+
+const TYPE_ICON: Record<string, LucideIcon> = {
+  dine_in: Store,
+  take_away: Package,
+  delivery: Bike,
+};
+
+const TYPE_COLOR: Record<string, string> = {
+  dine_in: "text-earth-500",
+  take_away: "text-heart-500",
+  delivery: "text-glow-500",
 };
 
 interface Meta {
@@ -17,6 +47,7 @@ interface Meta {
   from: number;
   to: number;
   total: number;
+  per_page: number;
 }
 
 interface Props {
@@ -36,151 +67,262 @@ export function OrderTable({
   onChangeStatus,
   onPageChange,
 }: Props) {
+  const perPage = meta?.per_page || 20;
+
   return (
-    <div className="space-y-3">
-      {/* Header */}
-      <div className="hidden lg:grid grid-cols-[1fr_80px_100px_110px_120px_90px_100px] gap-3 px-4 py-2 text-[10px] text-slate-500 uppercase tracking-wider font-medium">
-        <span>Order</span>
-        <span>Tipe</span>
-        <span>Status</span>
-        <span>Total</span>
-        <span>Pembayaran</span>
-        <span>Waktu</span>
-        <span className="text-right">Aksi</span>
-      </div>
+    <div className="space-y-4">
+      {/* Table */}
+      <div className="rounded-xl border border-border overflow-hidden bg-card">
+        <Table>
+          <TableHeader>
+            <TableRow className="border-border hover:bg-muted/50">
+              <TableHead className="text-muted-foreground font-medium">
+                Order
+              </TableHead>
+              <TableHead className="text-muted-foreground font-medium">
+                Tipe
+              </TableHead>
+              <TableHead className="text-muted-foreground font-medium">
+                Status
+              </TableHead>
+              <TableHead className="text-muted-foreground font-medium">
+                Total
+              </TableHead>
+              <TableHead className="text-muted-foreground font-medium">
+                Pembayaran
+              </TableHead>
+              <TableHead className="text-muted-foreground font-medium">
+                Waktu
+              </TableHead>
+              <TableHead className="text-muted-foreground font-medium text-right">
+                Aksi
+              </TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {/* Loading Skeleton */}
+            {isLoading &&
+              Array.from({ length: 5 }).map((_, i) => (
+                <TableRow key={i} className="border-border hover:bg-muted/50">
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <Skeleton className="h-8 w-8 rounded-lg bg-muted" />
+                      <div className="space-y-1">
+                        <Skeleton className="h-4 w-24 bg-muted" />
+                        <Skeleton className="h-3 w-16 bg-muted" />
+                      </div>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton className="h-4 w-16 bg-muted" />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton className="h-5 w-20 bg-muted rounded-full" />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton className="h-4 w-20 bg-muted" />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton className="h-5 w-16 bg-muted rounded-full" />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton className="h-4 w-24 bg-muted" />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton className="h-8 w-16 bg-muted ml-auto" />
+                  </TableCell>
+                </TableRow>
+              ))}
 
-      {/* Skeleton */}
-      {isLoading &&
-        Array.from({ length: 8 }).map((_, i) => (
-          <Skeleton key={i} className="h-14 bg-slate-800 rounded-xl" />
-        ))}
+            {/* Data Rows */}
+            {!isLoading &&
+              orders.map((order) => {
+                const TypeIcon = TYPE_ICON[order.order_type] || Store;
+                const typeColor =
+                  TYPE_COLOR[order.order_type] || "text-muted-foreground";
 
-      {/* Rows */}
-      {!isLoading &&
-        orders.map((order) => (
-          <div
-            key={order.id}
-            className="grid grid-cols-2 lg:grid-cols-[1fr_80px_100px_110px_120px_90px_100px] gap-3 items-center px-4 py-3 bg-slate-900 border border-slate-800 rounded-xl hover:border-slate-700 transition-colors"
-          >
-            {/* Order info */}
-            <div>
-              <p className="text-sm font-semibold text-white">
-                {order.order_code}
-              </p>
-              <p className="text-xs text-slate-500 mt-0.5">
-                {order.customer?.name ?? "Walk-in"}
-                {order.table_number && ` · Meja ${order.table_number}`}
-              </p>
-            </div>
+                return (
+                  <TableRow
+                    key={order.id}
+                    className="border-border hover:bg-muted/50 transition-colors group"
+                  >
+                    {/* Order Info */}
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <div
+                          className={cn(
+                            "w-8 h-8 rounded-lg flex items-center justify-center shrink-0",
+                            `bg-${typeColor.replace("text-", "")}/10`,
+                          )}
+                        >
+                          <TypeIcon className={cn("w-4 h-4", typeColor)} />
+                        </div>
+                        <div>
+                          <p className="text-sm font-semibold text-foreground">
+                            {order.order_code}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {order.customer?.name ?? "Walk-in"}
+                          </p>
+                        </div>
+                      </div>
+                    </TableCell>
 
-            {/* Tipe */}
-            <span className="hidden lg:block text-xs text-slate-400">
-              {TYPE_LABEL[order.order_type] ?? order.order_type}
-            </span>
+                    {/* Tipe */}
+                    <TableCell>
+                      <span className="text-xs text-muted-foreground capitalize">
+                        {TYPE_LABEL[order.order_type] ?? order.order_type}
+                        {order.table_number && ` di Meja ${order.table_number}`}
+                      </span>
+                    </TableCell>
 
-            {/* Status */}
-            <div className="hidden lg:block">
-              <OrderStatusBadge status={order.status} />
-            </div>
+                    {/* Status */}
+                    <TableCell>
+                      <OrderStatusBadge status={order.status} />
+                    </TableCell>
 
-            {/* Total */}
-            <span className="hidden lg:block text-sm font-medium text-white">
-              {order.formatted_total}
-            </span>
+                    {/* Total */}
+                    <TableCell>
+                      <span className="text-sm font-medium text-muted-foreground">
+                        {order.formatted_total}
+                      </span>
+                    </TableCell>
 
-            {/* Payment */}
-            <div className="hidden lg:block">
-              {order.payment ? (
-                <Badge
-                  variant="outline"
-                  className={
-                    order.payment.status === "paid"
-                      ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30 text-[10px]"
-                      : order.payment.status === "partial"
-                        ? "bg-orange-500/10 text-orange-400 border-orange-500/30 text-[10px]"
-                        : "bg-slate-500/10 text-slate-400 border-slate-500/30 text-[10px]"
-                  }
-                >
-                  {order.payment.status === "paid"
-                    ? "Lunas"
-                    : order.payment.status === "partial"
-                      ? "DP"
-                      : "Belum"}
-                </Badge>
-              ) : (
-                <span className="text-xs text-slate-600">—</span>
-              )}
-            </div>
+                    {/* Payment */}
+                    <TableCell>
+                      {order.payment ? (
+                        <Badge
+                          variant="outline"
+                          className={cn(
+                            "text-[10px] font-medium",
+                            order.payment.status === "paid"
+                              ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/30"
+                              : order.payment.status === "partial"
+                                ? "bg-glow-500/10 text-glow-500 border-glow-500/30"
+                                : "bg-destructive/10 text-destructive border-destructive/30",
+                          )}
+                        >
+                          <span className="flex items-center gap-1">
+                            <span
+                              className={cn(
+                                "w-1.5 h-1.5 rounded-full",
+                                order.payment.status === "paid"
+                                  ? "bg-emerald-500"
+                                  : order.payment.status === "partial"
+                                    ? "bg-glow-500"
+                                    : "bg-destructive",
+                              )}
+                            />
+                            {order.payment.status === "paid"
+                              ? "Lunas"
+                              : order.payment.status === "partial"
+                                ? "DP"
+                                : "Belum"}
+                          </span>
+                        </Badge>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">—</span>
+                      )}
+                    </TableCell>
 
-            {/* Waktu */}
-            <span className="hidden lg:block text-[11px] text-slate-500">
-              {new Date(order.created_at).toLocaleString("id-ID", {
-                day: "2-digit",
-                month: "short",
-                hour: "2-digit",
-                minute: "2-digit",
+                    {/* Waktu */}
+                    <TableCell>
+                      <span className="text-[11px] text-muted-foreground">
+                        {new Date(order.created_at).toLocaleString("id-ID", {
+                          day: "2-digit",
+                          month: "short",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </span>
+                    </TableCell>
+
+                    {/* Aksi */}
+                    <TableCell className="text-right">
+                      <div className="flex items-center justify-end gap-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="w-7 h-7 text-muted-foreground hover:text-foreground hover:bg-muted"
+                          onClick={() => onView(order)}
+                          title="Lihat detail"
+                        >
+                          <Eye className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="w-7 h-7 text-muted-foreground hover:text-heart-500 hover:bg-muted"
+                          onClick={() => onChangeStatus(order)}
+                          title="Ubah status"
+                        >
+                          <RefreshCw className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                );
               })}
-            </span>
 
-            {/* Aksi */}
-            <div className="flex items-center justify-end gap-1.5 col-span-1">
-              {/* Mobile: tampilkan status di sini */}
-              <div className="lg:hidden">
-                <OrderStatusBadge status={order.status} />
-              </div>
-
-              <Button
-                variant="ghost"
-                size="icon"
-                className="w-8 h-8 text-slate-400 hover:text-white hover:bg-slate-800"
-                onClick={() => onView(order)}
-                title="Lihat detail"
-              >
-                <Eye className="w-4 h-4" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="w-8 h-8 text-slate-400 hover:text-amber-400 hover:bg-slate-800"
-                onClick={() => onChangeStatus(order)}
-                title="Ubah status"
-              >
-                <RefreshCw className="w-4 h-4" />
-              </Button>
-            </div>
-          </div>
-        ))}
-
-      {/* Empty */}
-      {!isLoading && orders.length === 0 && (
-        <div className="text-center py-14 text-slate-500 text-sm">
-          Tidak ada pesanan ditemukan
-        </div>
-      )}
+            {/* Empty State */}
+            {!isLoading && orders.length === 0 && (
+              <TableRow className="border-border hover:bg-muted/50">
+                <TableCell colSpan={7} className="text-center py-16">
+                  <div className="flex flex-col items-center justify-center">
+                    <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-3">
+                      <Store className="w-8 h-8 text-muted-foreground" />
+                    </div>
+                    <p className="text-sm font-medium text-foreground mb-1">
+                      Tidak ada pesanan ditemukan
+                    </p>
+                    <p className="text-xs text-muted-foreground max-w-sm">
+                      Coba ubah filter pencarian atau tunggu pesanan baru masuk
+                    </p>
+                  </div>
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </div>
 
       {/* Pagination */}
       {meta && meta.last_page > 1 && (
-        <div className="flex items-center justify-between pt-1">
-          <span className="text-xs text-slate-500">
-            {meta.from}–{meta.to} dari {meta.total} pesanan
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+          <span className="text-xs text-muted-foreground order-2 sm:order-1">
+            Menampilkan {meta.from}–{meta.to} dari {meta.total} pesanan
+            <span className="text-[10px] ml-1">({perPage} per halaman)</span>
           </span>
-          <div className="flex items-center gap-1">
+
+          <div className="flex items-center gap-2 order-1 sm:order-2">
             <Button
               variant="outline"
               size="icon"
-              className="w-8 h-8 bg-slate-900 border-slate-700 text-slate-400 hover:bg-slate-800 disabled:opacity-30"
+              className={cn(
+                "w-8 h-8 bg-background border-border text-muted-foreground",
+                "hover:bg-muted hover:text-foreground",
+                "disabled:opacity-30 disabled:hover:bg-background",
+                "transition-all",
+              )}
               disabled={meta.current_page <= 1}
               onClick={() => onPageChange(meta.current_page - 1)}
             >
               <ChevronLeft className="w-4 h-4" />
             </Button>
-            <span className="text-xs px-3 py-1 bg-slate-800 rounded-md border border-slate-700 text-white">
+
+            <span className="text-xs px-3 py-1 bg-muted rounded-md border border-border text-foreground">
               {meta.current_page} / {meta.last_page}
             </span>
+
             <Button
               variant="outline"
               size="icon"
-              className="w-8 h-8 bg-slate-900 border-slate-700 text-slate-400 hover:bg-slate-800 disabled:opacity-30"
+              className={cn(
+                "w-8 h-8 bg-background border-border text-muted-foreground",
+                "hover:bg-muted hover:text-foreground",
+                "disabled:opacity-30 disabled:hover:bg-background",
+                "transition-all",
+              )}
               disabled={meta.current_page >= meta.last_page}
               onClick={() => onPageChange(meta.current_page + 1)}
             >

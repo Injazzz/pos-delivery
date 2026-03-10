@@ -56,8 +56,7 @@ export function DeliveryStepsCard({ delivery, onUploadProof }: Props) {
   const mutation = useMutation({
     mutationFn: (status: string) =>
       deliveriesApi.updateStatus(delivery.id, status),
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    onSuccess: (res) => {
+    onSuccess: () => {
       toast.success("Status diperbarui.");
       qc.invalidateQueries({ queryKey: ["courier-deliveries"] });
     },
@@ -68,8 +67,10 @@ export function DeliveryStepsCard({ delivery, onUploadProof }: Props) {
   const currentStep = STEPS.find((s) => s.status === delivery.delivery_status);
 
   return (
-    <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 space-y-4">
-      <p className="text-sm font-semibold text-white">Progress Pengiriman</p>
+    <div className="bg-card border border-border rounded-xl p-4 space-y-4">
+      <p className="text-sm font-semibold text-foreground">
+        Progress Pengiriman
+      </p>
 
       {/* Steps */}
       <div className="space-y-1">
@@ -95,17 +96,19 @@ export function DeliveryStepsCard({ delivery, onUploadProof }: Props) {
                     isDone
                       ? "bg-emerald-500"
                       : isCurrent
-                        ? "bg-amber-500 ring-2 ring-amber-500/30"
-                        : "bg-slate-800 border border-slate-700",
+                        ? "bg-accent ring-2 ring-accent/30"
+                        : "bg-muted border border-border",
                   )}
                 >
                   {isDone ? (
-                    <CheckCircle className="w-3.5 h-3.5 text-white" />
+                    <CheckCircle className="w-3.5 h-3.5 text-foreground" />
                   ) : (
                     <Circle
                       className={cn(
                         "w-3 h-3",
-                        isCurrent ? "text-slate-950" : "text-slate-600",
+                        isCurrent
+                          ? "text-accent-foreground"
+                          : "text-muted-foreground",
                       )}
                     />
                   )}
@@ -114,7 +117,7 @@ export function DeliveryStepsCard({ delivery, onUploadProof }: Props) {
                   <div
                     className={cn(
                       "w-0.5 h-6 mt-1",
-                      isDone ? "bg-emerald-500/40" : "bg-slate-800",
+                      isDone ? "bg-emerald-500/40" : "bg-muted",
                     )}
                   />
                 )}
@@ -123,7 +126,9 @@ export function DeliveryStepsCard({ delivery, onUploadProof }: Props) {
                 <p
                   className={cn(
                     "text-sm font-medium",
-                    isDone || isCurrent ? "text-white" : "text-slate-600",
+                    isDone || isCurrent
+                      ? "text-foreground"
+                      : "text-muted-foreground",
                   )}
                 >
                   {LABELS[status]}
@@ -146,7 +151,7 @@ export function DeliveryStepsCard({ delivery, onUploadProof }: Props) {
             </Button>
           ) : (
             <Button
-              className="w-full h-11 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold gap-2"
+              className="w-full h-11 bg-accent hover:bg-accent/90 text-accent-foreground font-bold gap-2"
               disabled={mutation.isPending}
               onClick={() => mutation.mutate(currentStep.next)}
             >

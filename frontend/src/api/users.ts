@@ -1,6 +1,6 @@
 import apiClient from "@/lib/axios";
+import type { PaginatedResponse } from "@/types/pagination";
 import type {
-  PaginatedResponse,
   StoreUserPayload,
   UpdateUserPayload,
   User,

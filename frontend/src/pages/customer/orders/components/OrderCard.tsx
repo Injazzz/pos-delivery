@@ -12,16 +12,16 @@ interface Props {
 export function OrderCard({ order, onView }: Props) {
   return (
     <Card
-      className="bg-slate-900 border-slate-800 hover:border-slate-700 transition-colors cursor-pointer"
+      className="bg-card border-border hover:border-border/80 transition-colors cursor-pointer"
       onClick={() => onView(order)}
     >
       <CardContent className="p-4 space-y-3">
         <div className="flex items-start justify-between gap-2">
           <div>
-            <p className="text-sm font-semibold text-white">
+            <p className="text-sm font-semibold text-foreground">
               {order.order_code}
             </p>
-            <p className="text-xs text-slate-500 mt-0.5">
+            <p className="text-xs text-muted-foreground mt-0.5">
               {new Date(order.created_at).toLocaleString("id-ID", {
                 day: "2-digit",
                 month: "short",
@@ -35,7 +35,7 @@ export function OrderCard({ order, onView }: Props) {
         </div>
 
         {/* Items preview */}
-        <div className="flex items-center gap-1.5 text-slate-400">
+        <div className="flex items-center gap-1.5 text-muted-foreground">
           <ShoppingBag className="w-3.5 h-3.5 shrink-0" />
           <p className="text-xs truncate">
             {order.items
@@ -48,9 +48,9 @@ export function OrderCard({ order, onView }: Props) {
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between pt-1 border-t border-slate-800">
+        <div className="flex items-center justify-between pt-1 border-t border-border">
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-1 text-xs text-slate-500">
+            <div className="flex items-center gap-1 text-xs text-muted-foreground">
               {order.order_type === "delivery" ? (
                 <>
                   <MapPin className="w-3 h-3" />
@@ -65,10 +65,10 @@ export function OrderCard({ order, onView }: Props) {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-sm font-bold text-amber-400">
+            <span className="text-sm font-bold text-accent">
               {order.formatted_total}
             </span>
-            <ChevronRight className="w-4 h-4 text-slate-600" />
+            <ChevronRight className="w-4 h-4 text-muted/60" />
           </div>
         </div>
       </CardContent>

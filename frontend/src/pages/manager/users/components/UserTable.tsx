@@ -7,6 +7,7 @@ import {
   KeyRound,
   ChevronLeft,
   ChevronRight,
+  UserCog,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -52,6 +53,14 @@ interface Props {
   onPageChange: (page: number) => void;
 }
 
+// Role badge colors configuration
+const ROLE_BADGE_COLORS: Record<string, string> = {
+  manager: "bg-heart-500/10 text-heart-500 border-heart-500/30",
+  kasir: "bg-earth-500/10 text-earth-500 border-earth-500/30",
+  kurir: "bg-glow-500/10 text-glow-500 border-glow-500/30",
+  pelanggan: "bg-emerald-500/10 text-emerald-500 border-emerald-500/30",
+};
+
 export function UserTable({
   users,
   isLoading,
@@ -64,25 +73,27 @@ export function UserTable({
   onPageChange,
 }: Props) {
   return (
-    <div className="space-y-3">
-      <div className="rounded-xl border border-slate-800 overflow-hidden">
+    <div className="space-y-4">
+      <div className="rounded-xl border border-border overflow-hidden bg-card">
         <Table>
           <TableHeader>
-            <TableRow className="border-slate-800 hover:bg-transparent">
-              <TableHead className="text-slate-400 font-medium">
+            <TableRow className="border-border hover:bg-muted/50">
+              <TableHead className="text-muted-foreground font-medium">
                 Pengguna
               </TableHead>
-              <TableHead className="text-slate-400 font-medium">Role</TableHead>
-              <TableHead className="text-slate-400 font-medium hidden md:table-cell">
+              <TableHead className="text-muted-foreground font-medium">
+                Role
+              </TableHead>
+              <TableHead className="text-muted-foreground font-medium hidden md:table-cell">
                 No HP
               </TableHead>
-              <TableHead className="text-slate-400 font-medium">
+              <TableHead className="text-muted-foreground font-medium">
                 Status
               </TableHead>
-              <TableHead className="text-slate-400 font-medium hidden lg:table-cell">
+              <TableHead className="text-muted-foreground font-medium hidden lg:table-cell">
                 Terdaftar
               </TableHead>
-              <TableHead className="text-slate-400 font-medium text-right">
+              <TableHead className="text-muted-foreground font-medium text-right">
                 Aksi
               </TableHead>
             </TableRow>
@@ -91,35 +102,50 @@ export function UserTable({
             {/* Loading skeleton */}
             {isLoading &&
               Array.from({ length: 8 }).map((_, i) => (
-                <TableRow key={i} className="border-slate-800">
+                <TableRow key={i} className="border-border hover:bg-muted/50">
                   <TableCell>
-                    <Skeleton className="h-9 w-48 bg-slate-800 rounded-lg" />
+                    <div className="flex items-center gap-3">
+                      <Skeleton className="h-8 w-8 rounded-full bg-muted" />
+                      <div className="space-y-1">
+                        <Skeleton className="h-4 w-32 bg-muted" />
+                        <Skeleton className="h-3 w-24 bg-muted" />
+                      </div>
+                    </div>
                   </TableCell>
                   <TableCell>
-                    <Skeleton className="h-5 w-20 bg-slate-800 rounded-full" />
+                    <Skeleton className="h-5 w-20 bg-muted rounded-full" />
                   </TableCell>
                   <TableCell className="hidden md:table-cell">
-                    <Skeleton className="h-4 w-28 bg-slate-800" />
+                    <Skeleton className="h-4 w-28 bg-muted" />
                   </TableCell>
                   <TableCell>
-                    <Skeleton className="h-5 w-16 bg-slate-800 rounded-full" />
+                    <Skeleton className="h-5 w-16 bg-muted rounded-full" />
                   </TableCell>
                   <TableCell className="hidden lg:table-cell">
-                    <Skeleton className="h-4 w-24 bg-slate-800" />
+                    <Skeleton className="h-4 w-24 bg-muted" />
                   </TableCell>
                   <TableCell>
-                    <Skeleton className="h-8 w-8 bg-slate-800 rounded-md ml-auto" />
+                    <Skeleton className="h-8 w-8 bg-muted rounded-md ml-auto" />
                   </TableCell>
                 </TableRow>
               ))}
 
             {/* Empty state */}
             {!isLoading && users.length === 0 && (
-              <TableRow className="border-slate-800">
+              <TableRow className="border-border hover:bg-muted/50">
                 <TableCell colSpan={6} className="text-center py-16">
-                  <div className="flex flex-col items-center gap-2 text-slate-500">
-                    <span className="text-3xl">👤</span>
-                    <p className="text-sm">Tidak ada pengguna ditemukan</p>
+                  <div className="flex flex-col items-center gap-3">
+                    <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
+                      <UserCog className="w-8 h-8 text-muted-foreground" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-foreground mb-1">
+                        Tidak ada pengguna ditemukan
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        Coba ubah filter pencarian atau tambah pengguna baru
+                      </p>
+                    </div>
                   </div>
                 </TableCell>
               </TableRow>
@@ -130,13 +156,24 @@ export function UserTable({
               users.map((user) => (
                 <TableRow
                   key={user.id}
-                  className="border-slate-800 hover:bg-slate-900/50"
+                  className="border-border hover:bg-muted/50 transition-colors group"
                 >
                   <TableCell>
                     <div className="flex items-center gap-3">
-                      <Avatar className="w-8 h-8 shrink-0">
+                      <Avatar className="w-8 h-8 shrink-0 ring-2 ring-border">
                         <AvatarImage src={user.avatar_url} />
-                        <AvatarFallback className="bg-amber-500/20 text-amber-300 text-xs font-semibold">
+                        <AvatarFallback
+                          className={cn(
+                            "text-xs font-semibold",
+                            user.role === "manager"
+                              ? "bg-heart-500/20 text-heart-500"
+                              : user.role === "kasir"
+                                ? "bg-earth-500/20 text-earth-500"
+                                : user.role === "kurir"
+                                  ? "bg-glow-500/20 text-glow-500"
+                                  : "bg-emerald-500/20 text-emerald-500",
+                          )}
+                        >
                           {user.name
                             .split(" ")
                             .map((w) => w[0])
@@ -146,10 +183,10 @@ export function UserTable({
                         </AvatarFallback>
                       </Avatar>
                       <div className="min-w-0">
-                        <p className="text-sm font-medium text-white truncate">
+                        <p className="text-sm font-medium text-foreground truncate">
                           {user.name}
                         </p>
-                        <p className="text-xs text-slate-500 truncate">
+                        <p className="text-xs text-muted-foreground truncate">
                           {user.email}
                         </p>
                       </div>
@@ -160,38 +197,60 @@ export function UserTable({
                     <Badge
                       variant="outline"
                       className={cn(
-                        "text-[11px] font-medium",
-                        ROLE_CONFIG[user.role]?.color,
+                        "text-[11px] font-medium border",
+                        ROLE_BADGE_COLORS[user.role] ||
+                          "bg-muted text-muted-foreground border-border",
                       )}
                     >
                       {ROLE_CONFIG[user.role]?.label ?? user.role}
                     </Badge>
                   </TableCell>
 
-                  <TableCell className="hidden md:table-cell text-slate-400 text-sm">
-                    {user.phone ?? <span className="text-slate-600">—</span>}
+                  <TableCell className="hidden md:table-cell">
+                    <span
+                      className={cn(
+                        "text-sm",
+                        user.phone
+                          ? "text-foreground"
+                          : "text-muted-foreground italic",
+                      )}
+                    >
+                      {user.phone ?? "—"}
+                    </span>
                   </TableCell>
 
                   <TableCell>
                     <Badge
                       variant="outline"
                       className={cn(
-                        "text-[11px]",
+                        "text-[11px] font-medium",
                         user.status === "active"
-                          ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30"
-                          : "bg-red-500/10 text-red-400 border-red-500/30",
+                          ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/30"
+                          : "bg-destructive/10 text-destructive border-destructive/30",
                       )}
                     >
-                      {user.status === "active" ? "Aktif" : "Nonaktif"}
+                      <span className="flex items-center gap-1">
+                        <span
+                          className={cn(
+                            "w-1.5 h-1.5 rounded-full",
+                            user.status === "active"
+                              ? "bg-emerald-500"
+                              : "bg-destructive",
+                          )}
+                        />
+                        {user.status === "active" ? "Aktif" : "Nonaktif"}
+                      </span>
                     </Badge>
                   </TableCell>
 
-                  <TableCell className="hidden lg:table-cell text-slate-500 text-sm">
-                    {new Date(user.created_at).toLocaleDateString("id-ID", {
-                      day: "2-digit",
-                      month: "short",
-                      year: "numeric",
-                    })}
+                  <TableCell className="hidden lg:table-cell">
+                    <span className="text-sm text-muted-foreground">
+                      {new Date(user.created_at).toLocaleDateString("id-ID", {
+                        day: "2-digit",
+                        month: "short",
+                        year: "numeric",
+                      })}
+                    </span>
                   </TableCell>
 
                   <TableCell className="text-right">
@@ -200,55 +259,55 @@ export function UserTable({
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="w-8 h-8 text-slate-400 hover:text-white hover:bg-slate-800"
+                          className="w-8 h-8 text-muted-foreground hover:text-foreground hover:bg-muted transition-all"
                         >
                           <MoreHorizontal className="w-4 h-4" />
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent
                         align="end"
-                        className="w-48 bg-slate-900 border-slate-700 text-slate-200"
+                        className="w-48 bg-popover border-border"
                       >
                         <DropdownMenuItem
-                          className="gap-2 text-sm hover:bg-slate-800 cursor-pointer"
+                          className="gap-2 text-sm text-foreground hover:bg-muted cursor-pointer"
                           onClick={() => onEdit(user)}
                         >
-                          <Pencil className="w-3.5 h-3.5 text-slate-400" />
+                          <Pencil className="w-3.5 h-3.5 text-muted-foreground" />
                           Edit Pengguna
                         </DropdownMenuItem>
 
                         <DropdownMenuItem
-                          className="gap-2 text-sm hover:bg-slate-800 cursor-pointer"
+                          className="gap-2 text-sm text-foreground hover:bg-muted cursor-pointer"
                           onClick={() => onResetPassword(user)}
                         >
-                          <KeyRound className="w-3.5 h-3.5 text-slate-400" />
+                          <KeyRound className="w-3.5 h-3.5 text-muted-foreground" />
                           Reset Password
                         </DropdownMenuItem>
 
-                        <DropdownMenuSeparator className="bg-slate-700" />
+                        <DropdownMenuSeparator className="bg-border" />
 
                         <DropdownMenuItem
-                          className="gap-2 text-sm hover:bg-slate-800 cursor-pointer"
+                          className="gap-2 text-sm text-foreground hover:bg-muted cursor-pointer"
                           onClick={() => onToggleStatus(user.id)}
                           disabled={isToggling}
                         >
                           {user.status === "active" ? (
                             <>
-                              <PowerOff className="w-3.5 h-3.5 text-orange-400" />
-                              Nonaktifkan
+                              <PowerOff className="w-3.5 h-3.5 text-glow-500" />
+                              <span>Nonaktifkan</span>
                             </>
                           ) : (
                             <>
-                              <Power className="w-3.5 h-3.5 text-emerald-400" />
-                              Aktifkan
+                              <Power className="w-3.5 h-3.5 text-emerald-500" />
+                              <span>Aktifkan</span>
                             </>
                           )}
                         </DropdownMenuItem>
 
-                        <DropdownMenuSeparator className="bg-slate-700" />
+                        <DropdownMenuSeparator className="bg-border" />
 
                         <DropdownMenuItem
-                          className="gap-2 text-sm text-red-400 hover:bg-red-500/10 hover:text-red-300 cursor-pointer"
+                          className="gap-2 text-sm text-destructive hover:bg-destructive/10 hover:text-destructive cursor-pointer"
                           onClick={() => onDelete(user)}
                         >
                           <Trash2 className="w-3.5 h-3.5" />
@@ -265,27 +324,52 @@ export function UserTable({
 
       {/* Pagination */}
       {meta && meta.last_page > 1 && (
-        <div className="flex items-center justify-between text-sm text-slate-400">
-          <span>
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 text-sm">
+          <span className="text-muted-foreground order-2 sm:order-1">
             Menampilkan {meta.from}–{meta.to} dari {meta.total} pengguna
           </span>
-          <div className="flex items-center gap-1">
+
+          <div className="flex items-center gap-2 order-1 sm:order-2">
             <Button
               variant="outline"
               size="icon"
-              className="w-8 h-8 bg-slate-900 border-slate-700 text-slate-400 hover:bg-slate-800 disabled:opacity-30"
+              className="w-8 h-8 bg-background border-border text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-30 transition-all"
               disabled={meta.current_page <= 1}
               onClick={() => onPageChange(meta.current_page - 1)}
             >
               <ChevronLeft className="w-4 h-4" />
             </Button>
-            <span className="px-3 py-1 text-xs text-white bg-slate-800 rounded-md border border-slate-700">
-              {meta.current_page} / {meta.last_page}
-            </span>
+
+            <div className="flex items-center gap-1 px-2">
+              {Array.from({ length: Math.min(3, meta.last_page) }, (_, i) => {
+                const pageNumber = meta.current_page - 1 + i;
+                if (pageNumber < 1 || pageNumber > meta.last_page) return null;
+
+                return (
+                  <Button
+                    key={pageNumber}
+                    variant={
+                      pageNumber === meta.current_page ? "default" : "ghost"
+                    }
+                    size="sm"
+                    className={cn(
+                      "w-7 h-7 p-0 text-xs",
+                      pageNumber === meta.current_page
+                        ? "bg-heart-500 hover:bg-heart-600 text-white"
+                        : "text-muted-foreground hover:text-foreground hover:bg-muted",
+                    )}
+                    onClick={() => onPageChange(pageNumber)}
+                  >
+                    {pageNumber}
+                  </Button>
+                );
+              })}
+            </div>
+
             <Button
               variant="outline"
               size="icon"
-              className="w-8 h-8 bg-slate-900 border-slate-700 text-slate-400 hover:bg-slate-800 disabled:opacity-30"
+              className="w-8 h-8 bg-background border-border text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-30 transition-all"
               disabled={meta.current_page >= meta.last_page}
               onClick={() => onPageChange(meta.current_page + 1)}
             >

@@ -1,4 +1,4 @@
-import { RefreshCw } from "lucide-react";
+import { LayoutDashboard, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -9,7 +9,6 @@ import { OrderStatusChart } from "./components/OrderStatusChart";
 import { TopMenusCard } from "./components/TopMenusCard";
 import { RecentOrdersTable } from "./components/RecentOrdersTable";
 import { ActivityFeed } from "./components/ActivityFeed";
-import { ConnectionStatus, LiveBadge } from "@/components/shared/LiveBagde";
 
 export default function ManagerDashboard() {
   const qc = useQueryClient();
@@ -36,16 +35,18 @@ export default function ManagerDashboard() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-white">Dashboard</h1>
-          <p className="text-slate-400 text-sm mt-1 capitalize">{now}</p>
-          <ConnectionStatus className="mt-1" />
+          <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
+            <LayoutDashboard className="w-6 h-6 text-amber-400" />
+            Dashboard
+          </h1>
+          <p className="text-muted-foreground text-sm mt-1 capitalize">{now}</p>
+          {/* <ConnectionStatus className="mt-1" /> */}
         </div>
-        <LiveBadge />
         <Button
           variant="outline"
           size="sm"
           onClick={handleRefresh}
-          className="border-slate-700 text-slate-400 hover:text-white hover:bg-slate-800 gap-2 self-start sm:self-auto"
+          className="border-border text-muted-foreground hover:text-foreground hover:bg-muted gap-2 self-start sm:self-auto"
         >
           <RefreshCw className="w-3.5 h-3.5" />
           Refresh

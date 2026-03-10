@@ -2,7 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Bike, Phone, Loader2, UserCheck } from "lucide-react";
+import { Bike, Phone, Loader2, MapPin, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -12,6 +12,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { deliveriesApi } from "@/api/deliveries";
 import type { Courier, Delivery } from "@/types/delivery";
@@ -39,118 +40,190 @@ export function AssignCourierDialog({ delivery, onClose }: Props) {
     onSuccess: (res) => {
       toast.success(res.data.message);
       qc.invalidateQueries({ queryKey: ["manager-deliveries"] });
-      onClose();
-      setSelected(null);
+      handleClose();
     },
     onError: (err: any) => toast.error(err.response?.data?.message ?? "Gagal."),
   });
 
+  const handleClose = () => {
+    setSelected(null);
+    onClose();
+  };
+
+  const availableCouriers =
+    couriers?.filter((c: Courier) => (c.active_deliveries ?? 0) < 3) || [];
+
   return (
-    <Dialog open={!!delivery} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="bg-slate-900 border-slate-700 sm:max-w-md">
+    <Dialog open={!!delivery} onOpenChange={(v) => !v && handleClose()}>
+      <DialogContent className="bg-card border-border sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="text-white">Tugaskan Kurir</DialogTitle>
-          <DialogDescription className="text-slate-400">
-            Order #{delivery?.order?.order_code} · {delivery?.address}
-          </DialogDescription>
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-glow-500/20 flex items-center justify-center">
+              <Bike className="w-5 h-5 text-glow-500" />
+            </div>
+            <div>
+              <DialogTitle className="text-foreground text-lg">
+                Tugaskan Kurir
+              </DialogTitle>
+              <DialogDescription className="text-muted-foreground text-sm">
+                Pilih kurir untuk pengiriman ini
+              </DialogDescription>
+            </div>
+          </div>
         </DialogHeader>
 
-        <div className="space-y-3 py-2">
+        {/* Delivery Info */}
+        {delivery && (
+          <div className="bg-muted/50 border border-border rounded-lg p-3 mb-2">
+            <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
+              <MapPin className="w-3.5 h-3.5" />
+              <span className="font-medium text-foreground">
+                Alamat Pengiriman:
+              </span>
+            </div>
+            <p className="text-sm text-foreground pl-6">{delivery.address}</p>
+            <p className="text-xs text-muted-foreground pl-6 mt-1">
+              Order #{delivery.order?.order_code}
+            </p>
+          </div>
+        )}
+
+        <div className="space-y-3 py-2 max-h-100 overflow-y-auto pr-1 scrollbar-thin">
           {isLoading ? (
             <div className="space-y-2">
               {[1, 2, 3].map((i) => (
                 <div
                   key={i}
-                  className="h-16 bg-slate-800 rounded-xl animate-pulse"
+                  className="h-20 bg-muted rounded-xl animate-pulse"
                 />
               ))}
             </div>
-          ) : (couriers ?? []).length === 0 ? (
-            <div className="text-center py-8 text-slate-500">
-              <Bike className="w-8 h-8 mx-auto mb-2" />
-              <p className="text-sm">Tidak ada kurir aktif tersedia</p>
+          ) : availableCouriers.length === 0 ? (
+            <div className="text-center py-8 px-4">
+              <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mx-auto mb-3">
+                <Bike className="w-8 h-8 text-muted-foreground" />
+              </div>
+              <p className="text-sm font-medium text-foreground mb-1">
+                Tidak ada kurir tersedia
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Semua kurir sedang bertugas atau offline
+              </p>
             </div>
           ) : (
-            (couriers ?? []).map((courier: Courier) => (
-              <button
-                key={courier.id}
-                type="button"
-                onClick={() => setSelected(courier.id)}
-                className={cn(
-                  "w-full flex items-center gap-3 p-3 rounded-xl border text-left transition-all",
-                  selected === courier.id
-                    ? "bg-amber-500/10 border-amber-500 shadow-amber-500/10 shadow-lg"
-                    : "bg-slate-800 border-slate-700 hover:border-slate-600",
-                )}
-              >
-                {/* Avatar */}
-                <div className="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center shrink-0 overflow-hidden">
-                  {courier.avatar_url ? (
-                    <img
-                      src={courier.avatar_url}
-                      alt={courier.name}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <span className="text-white font-bold text-sm">
-                      {courier.name[0].toUpperCase()}
-                    </span>
-                  )}
-                </div>
+            availableCouriers.map((courier: Courier) => {
+              const isSelected = selected === courier.id;
+              const activeDeliveries = courier.active_deliveries ?? 0;
+              const isAvailable = activeDeliveries === 0;
 
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-white">
-                    {courier.name}
-                  </p>
-                  {courier.phone && (
-                    <div className="flex items-center gap-1 text-xs text-slate-500 mt-0.5">
-                      <Phone className="w-3 h-3" />
-                      {courier.phone}
-                    </div>
-                  )}
-                </div>
-
-                <Badge
-                  variant="outline"
+              return (
+                <button
+                  key={courier.id}
+                  type="button"
+                  onClick={() => setSelected(courier.id)}
                   className={cn(
-                    "text-[10px] shrink-0",
-                    (courier.active_deliveries ?? 0) === 0
-                      ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30"
-                      : "bg-amber-500/10 text-amber-400 border-amber-500/30",
+                    "w-full flex items-start gap-3 p-3 rounded-xl border text-left transition-all",
+                    isSelected
+                      ? "bg-heart-500/10 border-heart-500 shadow-lg shadow-heart-500/10"
+                      : "bg-card border-border hover:border-heart-500/50 hover:bg-muted/50",
                   )}
                 >
-                  {(courier.active_deliveries ?? 0) === 0
-                    ? "Tersedia"
-                    : `${courier.active_deliveries} aktif`}
-                </Badge>
+                  {/* Avatar */}
+                  <Avatar className="w-12 h-12 shrink-0 border-2 border-border">
+                    <AvatarImage src={courier.avatar_url} />
+                    <AvatarFallback
+                      className={cn(
+                        "text-white font-bold",
+                        isAvailable ? "bg-emerald-500" : "bg-glow-500",
+                      )}
+                    >
+                      {courier.name[0].toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
 
-                {selected === courier.id && (
-                  <UserCheck className="w-4 h-4 text-amber-400 shrink-0" />
-                )}
-              </button>
-            ))
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-sm font-semibold text-foreground">
+                        {courier.name}
+                      </p>
+                      {isSelected && (
+                        <CheckCircle2 className="w-4 h-4 text-heart-500 shrink-0" />
+                      )}
+                    </div>
+
+                    {courier.phone && (
+                      <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
+                        <Phone className="w-3 h-3" />
+                        <span>{courier.phone}</span>
+                      </div>
+                    )}
+
+                    <div className="flex items-center gap-2 mt-2">
+                      <Badge
+                        variant="outline"
+                        className={cn(
+                          "text-[10px] font-medium",
+                          isAvailable
+                            ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/30"
+                            : "bg-glow-500/10 text-glow-500 border-glow-500/30",
+                        )}
+                      >
+                        {isAvailable
+                          ? "Tersedia"
+                          : `${activeDeliveries} pengiriman aktif`}
+                      </Badge>
+
+                      {activeDeliveries > 0 && (
+                        <div className="flex items-center gap-1">
+                          <div className="flex -space-x-1">
+                            {Array.from({ length: activeDeliveries }).map(
+                              (_, i) => (
+                                <div
+                                  key={i}
+                                  className="w-2 h-2 rounded-full bg-glow-500/50 border border-background"
+                                />
+                              ),
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </button>
+              );
+            })
           )}
         </div>
 
-        <div className="flex gap-2 pt-2">
+        <div className="flex gap-2 pt-4 border-t border-border">
           <Button
             variant="outline"
-            className="flex-1 border-slate-700 text-slate-300 hover:bg-slate-800"
-            onClick={onClose}
+            className="flex-1 border-border text-foreground hover:bg-muted hover:text-foreground transition-all"
+            onClick={handleClose}
+            disabled={mutation.isPending}
           >
             Batal
           </Button>
           <Button
-            className="flex-1 bg-amber-500 hover:bg-amber-400 text-slate-950 font-semibold"
+            className="flex-1 bg-heart-500 hover:bg-heart-600 text-white font-semibold transition-all"
             disabled={!selected || mutation.isPending}
             onClick={() => selected && mutation.mutate(selected)}
           >
-            {mutation.isPending && (
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            {mutation.isPending ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Menugaskan...
+              </>
+            ) : (
+              "Tugaskan Kurir"
             )}
-            Tugaskan
           </Button>
         </div>
+
+        {/* Info footer */}
+        <p className="text-[10px] text-center text-muted-foreground">
+          Kurir dapat menangani maksimal 3 pengiriman sekaligus
+        </p>
       </DialogContent>
     </Dialog>
   );

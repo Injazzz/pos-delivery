@@ -107,7 +107,7 @@ class DashboardController extends Controller
             ->join('menus', 'order_items.menu_id', '=', 'menus.id')
             ->join('orders', 'order_items.order_id', '=', 'orders.id')
             ->where('orders.created_at', '>=', now()->subDays(30))
-            ->whereNotIn('orders.status', ['cancelled'])
+            ->whereIn('orders.status', ['delivered', 'ready'])
             ->select(
                 'menus.id',
                 'menus.name',

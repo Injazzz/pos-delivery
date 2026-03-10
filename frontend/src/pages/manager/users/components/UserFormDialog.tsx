@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Loader2 } from "lucide-react";
+import { Loader2, UserPlus, UserCog } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -26,6 +26,7 @@ import { storeUserSchema, updateUserSchema } from "../schemas";
 import type { StoreUserForm, UpdateUserForm } from "../schemas";
 import type { User } from "@/types/user";
 import { ROLE_OPTIONS, STATUS_OPTIONS } from "../types";
+import { cn } from "@/lib/utils";
 
 // ── Create Dialog ─────────────────────────────────────────────────────────────
 
@@ -72,12 +73,21 @@ export function UserCreateDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="bg-slate-900 border-slate-700 sm:max-w-lg">
+      <DialogContent className="bg-card border-border sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle className="text-white">Tambah Pengguna Baru</DialogTitle>
-          <DialogDescription className="text-slate-400">
-            Isi data untuk membuat akun pengguna baru.
-          </DialogDescription>
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-10 h-10 rounded-full bg-heart-500/20 flex items-center justify-center">
+              <UserPlus className="w-5 h-5 text-heart-500" />
+            </div>
+            <div>
+              <DialogTitle className="text-foreground text-lg">
+                Tambah Pengguna Baru
+              </DialogTitle>
+              <DialogDescription className="text-muted-foreground text-sm">
+                Isi data untuk membuat akun pengguna baru.
+              </DialogDescription>
+            </div>
+          </div>
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 py-2">
@@ -88,19 +98,20 @@ export function UserCreateDialog({
             watch={watch}
             mode="create"
           />
-          <DialogFooter>
+          <DialogFooter className="gap-1 sm:gap-2">
             <Button
               type="button"
               variant="outline"
-              className="border-slate-700 text-slate-300 hover:bg-slate-800"
+              className="border-border text-foreground hover:bg-muted hover:text-foreground transition-all"
               onClick={() => handleClose(false)}
+              disabled={isLoading}
             >
               Batal
             </Button>
             <Button
               type="submit"
               disabled={isLoading}
-              className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-semibold"
+              className="bg-heart-500 hover:bg-heart-600 text-white transition-all min-w-30"
             >
               {isLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
               {isLoading ? "Menyimpan..." : "Buat Pengguna"}
@@ -164,12 +175,24 @@ export function UserEditDialog({
 
   return (
     <Dialog open={!!user} onOpenChange={(v) => !v && onOpenChange(false)}>
-      <DialogContent className="bg-slate-900 border-slate-700 sm:max-w-lg">
+      <DialogContent className="bg-card border-border sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle className="text-white">Edit Pengguna</DialogTitle>
-          <DialogDescription className="text-slate-400">
-            Edit data untuk <span className="text-white">{user?.name}</span>
-          </DialogDescription>
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-10 h-10 rounded-full bg-earth-500/20 flex items-center justify-center">
+              <UserCog className="w-5 h-5 text-earth-500" />
+            </div>
+            <div>
+              <DialogTitle className="text-foreground text-lg">
+                Edit Pengguna
+              </DialogTitle>
+              <DialogDescription className="text-muted-foreground text-sm">
+                Edit data untuk{" "}
+                <span className="font-semibold text-foreground bg-muted px-1.5 py-0.5 rounded">
+                  {user?.name}
+                </span>
+              </DialogDescription>
+            </div>
+          </div>
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 py-2">
@@ -180,19 +203,20 @@ export function UserEditDialog({
             watch={watch}
             mode="edit"
           />
-          <DialogFooter>
+          <DialogFooter className="gap-2 sm:gap-0">
             <Button
               type="button"
               variant="outline"
-              className="border-slate-700 text-slate-300 hover:bg-slate-800"
+              className="border-border text-foreground hover:bg-muted hover:text-foreground transition-all"
               onClick={() => onOpenChange(false)}
+              disabled={isLoading}
             >
               Batal
             </Button>
             <Button
               type="submit"
               disabled={isLoading}
-              className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-semibold"
+              className="bg-earth-500 hover:bg-earth-600 text-white transition-all min-w-30"
             >
               {isLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
               {isLoading ? "Menyimpan..." : "Simpan Perubahan"}
@@ -251,74 +275,142 @@ function UserFormFields({
     },
   ];
 
+  // Helper untuk mendapatkan warna role
+  const getRoleColor = (role: string) => {
+    const colors: Record<string, string> = {
+      manager: "text-heart-500 border-heart-500/30 bg-heart-500/10",
+      kasir: "text-earth-500 border-earth-500/30 bg-earth-500/10",
+      kurir: "text-glow-500 border-glow-500/30 bg-glow-500/10",
+      pelanggan: "text-emerald-500 border-emerald-500/30 bg-emerald-500/10",
+    };
+    return colors[role] || "";
+  };
+
+  // Helper untuk mendapatkan warna status
+  const getStatusColor = (status: string) => {
+    const colors: Record<string, string> = {
+      active: "text-emerald-500 border-emerald-500/30 bg-emerald-500/10",
+      inactive: "text-muted-foreground border-border bg-muted",
+    };
+    return colors[status] || "";
+  };
+
   return (
     <>
       {TEXT_FIELDS.map((f) => (
         <div key={f.id} className="space-y-1.5">
-          <Label className="text-slate-300 text-sm">{f.label}</Label>
+          <Label className="text-foreground text-sm font-medium">
+            {f.label}
+            {f.id === "phone" && mode === "create" && (
+              <span className="text-muted-foreground text-xs ml-2">
+                (opsional)
+              </span>
+            )}
+          </Label>
           <Input
             type={f.type}
             placeholder={f.placeholder}
-            className="bg-slate-800 border-slate-700 text-white placeholder:text-slate-500 focus:border-amber-500"
+            className="bg-background border-border text-foreground placeholder:text-muted-foreground focus:border-heart-500 focus:ring-heart-500/20 transition-all"
             {...register(f.id)}
           />
           {errors[f.id] && (
-            <p className="text-red-400 text-xs">{errors[f.id]?.message}</p>
+            <p className="text-destructive text-xs flex items-center gap-1 mt-1">
+              <span className="w-1 h-1 rounded-full bg-destructive" />
+              {errors[f.id]?.message}
+            </p>
           )}
         </div>
       ))}
 
       {/* Role */}
       <div className="space-y-1.5">
-        <Label className="text-slate-300 text-sm">Role</Label>
+        <Label className="text-foreground text-sm font-medium">Role</Label>
         <Select
           value={watch("role") ?? ""}
           onValueChange={(v) => setValue("role", v, { shouldValidate: true })}
         >
-          <SelectTrigger className="bg-slate-800 border-slate-700 text-slate-300">
+          <SelectTrigger className="bg-background border-border text-foreground hover:bg-muted/50 focus:border-heart-500 focus:ring-heart-500/20 transition-all">
             <SelectValue placeholder="Pilih role" />
           </SelectTrigger>
-          <SelectContent className="bg-slate-900 border-slate-700">
+          <SelectContent className="bg-popover border-border">
             {ROLE_OPTIONS.map((r) => (
               <SelectItem
                 key={r.value}
                 value={r.value}
-                className="text-slate-300"
+                className={cn(
+                  "text-foreground focus:bg-muted focus:text-foreground",
+                  getRoleColor(r.value),
+                )}
               >
-                {r.label}
+                <div className="flex items-center gap-2">
+                  <span
+                    className={cn(
+                      "w-2 h-2 rounded-full",
+                      r.value === "manager"
+                        ? "bg-heart-500"
+                        : r.value === "kasir"
+                          ? "bg-earth-500"
+                          : r.value === "kurir"
+                            ? "bg-glow-500"
+                            : r.value === "pelanggan"
+                              ? "bg-emerald-500"
+                              : "bg-muted-foreground",
+                    )}
+                  />
+                  {r.label}
+                </div>
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
         {errors.role && (
-          <p className="text-red-400 text-xs">{errors.role?.message}</p>
+          <p className="text-destructive text-xs flex items-center gap-1 mt-1">
+            <span className="w-1 h-1 rounded-full bg-destructive" />
+            {errors.role?.message}
+          </p>
         )}
       </div>
 
       {/* Status */}
       <div className="space-y-1.5">
-        <Label className="text-slate-300 text-sm">Status</Label>
+        <Label className="text-foreground text-sm font-medium">Status</Label>
         <Select
           value={watch("status") ?? "active"}
           onValueChange={(v) => setValue("status", v, { shouldValidate: true })}
         >
-          <SelectTrigger className="bg-slate-800 border-slate-700 text-slate-300">
+          <SelectTrigger className="bg-background border-border text-foreground hover:bg-muted/50 focus:border-heart-500 focus:ring-heart-500/20 transition-all">
             <SelectValue placeholder="Pilih status" />
           </SelectTrigger>
-          <SelectContent className="bg-slate-900 border-slate-700">
+          <SelectContent className="bg-popover border-border">
             {STATUS_OPTIONS.map((s) => (
               <SelectItem
                 key={s.value}
                 value={s.value}
-                className="text-slate-300"
+                className={cn(
+                  "text-foreground focus:bg-muted focus:text-foreground",
+                  getStatusColor(s.value),
+                )}
               >
-                {s.label}
+                <div className="flex items-center gap-2">
+                  <span
+                    className={cn(
+                      "w-2 h-2 rounded-full",
+                      s.value === "active"
+                        ? "bg-emerald-500"
+                        : "bg-muted-foreground",
+                    )}
+                  />
+                  {s.label}
+                </div>
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
         {errors.status && (
-          <p className="text-red-400 text-xs">{errors.status?.message}</p>
+          <p className="text-destructive text-xs flex items-center gap-1 mt-1">
+            <span className="w-1 h-1 rounded-full bg-destructive" />
+            {errors.status?.message}
+          </p>
         )}
       </div>
     </>

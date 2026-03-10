@@ -6,7 +6,7 @@ import {
   UtensilsCrossed,
   Banknote,
 } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import type { DashboardSummary } from "@/types/dashboard";
@@ -30,8 +30,8 @@ export function StatsGrid({ data, isLoading }: Props) {
       sub: data ? `Hari ini: ${formatRupiah(data.revenue.today)}` : "",
       growth: data?.revenue.growth,
       icon: Banknote,
-      gradient: "from-amber-500/20 to-amber-500/5",
-      iconBg: "bg-amber-500/20 text-amber-400",
+      gradient: "from-accent/20 to-accent/5",
+      iconBg: "bg-accent/20 text-accent",
     },
     {
       label: "Order Bulan Ini",
@@ -39,8 +39,8 @@ export function StatsGrid({ data, isLoading }: Props) {
       sub: data ? `Hari ini: ${data.orders.today} order` : "",
       growth: data?.orders.growth,
       icon: ShoppingBag,
-      gradient: "from-blue-500/20 to-blue-500/5",
-      iconBg: "bg-blue-500/20 text-blue-400",
+      gradient: "from-primary/20 to-primary/5",
+      iconBg: "bg-primary/20 text-primary",
     },
     {
       label: "Total Pengguna",
@@ -50,8 +50,8 @@ export function StatsGrid({ data, isLoading }: Props) {
         : "",
       growth: null,
       icon: Users,
-      gradient: "from-violet-500/20 to-violet-500/5",
-      iconBg: "bg-violet-500/20 text-violet-400",
+      gradient: "from-secondary/20 to-secondary/5",
+      iconBg: "bg-secondary/20 text-secondary",
     },
     {
       label: "Menu Aktif",
@@ -70,11 +70,12 @@ export function StatsGrid({ data, isLoading }: Props) {
         <Card
           key={stat.label}
           className={cn(
-            "bg-linear-to-br border-slate-800 overflow-hidden",
+            "bg-linear-to-br shadow-lg overflow-hidden",
             stat.gradient,
           )}
         >
-          <CardContent className="p-4">
+          <CardTitle className="text-sm px-3">{stat.label}</CardTitle>
+          <CardContent className="px-4">
             <div className="flex items-start justify-between gap-2 mb-3">
               <div
                 className={cn(
@@ -105,17 +106,16 @@ export function StatsGrid({ data, isLoading }: Props) {
 
             {isLoading ? (
               <div className="space-y-1.5">
-                <Skeleton className="h-7 w-24 bg-slate-800" />
-                <Skeleton className="h-3 w-32 bg-slate-800" />
+                <Skeleton className="h-7 w-24 bg-muted" />
+                <Skeleton className="h-3 w-32 bg-muted" />
               </div>
             ) : (
               <>
-                <p className="text-2xl font-bold text-white leading-none">
+                <p className="text-2xl font-bold text-foreground leading-none">
                   {stat.value}
                 </p>
-                <p className="text-xs text-slate-500 mt-1.5">{stat.sub}</p>
-                <p className="text-[11px] text-slate-600 mt-0.5">
-                  {stat.label}
+                <p className="text-xs text-muted-foreground mt-1.5">
+                  {stat.sub}
                 </p>
               </>
             )}

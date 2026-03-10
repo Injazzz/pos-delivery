@@ -1,7 +1,6 @@
 import { useEffect, useRef } from "react";
 import type { Channel } from "laravel-echo";
 import { getEcho } from "@/lib/echo";
-import { useRealtimeStore } from "@/stores/realtimeStore";
 
 type EventData =
   | Record<string, unknown>
@@ -16,23 +15,18 @@ type Listener = {
   callback: (data: EventData) => void;
 };
 
-type ConnectionState = "connecting" | "connected" | "disconnected" | "failed";
-
-interface PusherState {
-  current: string;
-  previous?: string;
-}
-
 /**
  * Generic hook — subscribe ke private channel + beberapa event.
  * Auto-cleanup saat unmount.
+ *
+ * Note: Connection state tracking is now handled globally by useEchoConnection hook
+ * in AppShell, so don't need to track it here anymore.
  */
 export function useEcho(
   channelName: string | null,
   listeners: Listener[],
   deps: unknown[] = [],
 ) {
-  const setConnection = useRealtimeStore((s) => s.setConnection);
   const channelRef = useRef<Channel | null>(null);
 
   useEffect(() => {
@@ -41,23 +35,6 @@ export function useEcho(
     const echo = getEcho();
     const channel = echo.private(channelName);
     channelRef.current = channel;
-
-    // Connection state tracking
-    const pusher = echo.connector?.pusher;
-    if (pusher?.connection) {
-      pusher.connection.bind("state_change", (states: PusherState) => {
-        const { current } = states;
-        const map: Record<string, ConnectionState> = {
-          initialized: "connecting",
-          connecting: "connecting",
-          connected: "connected",
-          disconnected: "disconnected",
-          failed: "failed",
-          unavailable: "failed",
-        };
-        setConnection(map[current] ?? "disconnected");
-      });
-    }
 
     // Register all listeners
     listeners.forEach(({ event, callback }) => {

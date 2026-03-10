@@ -31,11 +31,11 @@ export default function ManagerReportsPage() {
       {/* Header */}
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-white flex items-center gap-2">
+          <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
             <BarChart2 className="w-6 h-6 text-amber-400" />
             Laporan Penjualan
           </h1>
-          <p className="text-slate-400 text-sm mt-1">
+          <p className="text-muted-foreground text-sm mt-1">
             Analisis pendapatan, order, dan menu terlaris
           </p>
         </div>

@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Loader2 } from "lucide-react";
+import { Loader2, Utensils, Clock, Package, DollarSign } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -26,8 +26,18 @@ import {
 } from "@/components/ui/select";
 import { menuSchema, type MenuForm } from "../schemas";
 import type { Menu } from "@/types/menu";
+import { cn } from "@/lib/utils";
 
 const PRESET_CATEGORIES = ["Makanan", "Minuman", "Snack", "Dessert", "Paket"];
+
+// Mapping kategori ke warna
+const CATEGORY_COLORS: Record<string, string> = {
+  makanan: "text-earth-500",
+  minuman: "text-heart-500",
+  snack: "text-glow-500",
+  dessert: "text-emerald-500",
+  paket: "text-purple-500",
+};
 
 interface CreateProps {
   mode: "create";
@@ -67,7 +77,7 @@ export function MenuFormDialog(props: Props) {
     reset,
     formState: { errors },
   } = useForm<MenuForm>({
-    resolver: zodResolver(menuSchema) as any, // Type assertion sementara
+    resolver: zodResolver(menuSchema) as any,
     defaultValues: {
       is_available: true,
       preparation_time: 15,
@@ -98,9 +108,7 @@ export function MenuFormDialog(props: Props) {
     reset();
   };
 
-  // Handler untuk transform data sebelum submit
   const handleFormSubmit = (data: MenuForm) => {
-    // Pastikan data sudah dalam format yang benar
     const formattedData: MenuForm = {
       ...data,
       price: Number(data.price),
@@ -112,46 +120,76 @@ export function MenuFormDialog(props: Props) {
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && handleClose()}>
-      <DialogContent className="bg-slate-900 border-slate-700 sm:max-w-xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="bg-card border-border sm:max-w-xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-white">
-            {isEdit ? "Edit Menu" : "Tambah Menu Baru"}
-          </DialogTitle>
-          <DialogDescription className="text-slate-400">
-            {isEdit ? `Edit data untuk ${menu?.name}` : "Isi data menu baru"}
-          </DialogDescription>
+          <div className="flex items-center gap-3 mb-2">
+            <div
+              className={cn(
+                "w-10 h-10 rounded-full flex items-center justify-center",
+                isEdit ? "bg-earth-500/20" : "bg-heart-500/20",
+              )}
+            >
+              <Utensils
+                className={cn(
+                  "w-5 h-5",
+                  isEdit ? "text-earth-500" : "text-heart-500",
+                )}
+              />
+            </div>
+            <div>
+              <DialogTitle className="text-foreground text-lg">
+                {isEdit ? "Edit Menu" : "Tambah Menu Baru"}
+              </DialogTitle>
+              <DialogDescription className="text-muted-foreground text-sm">
+                {isEdit
+                  ? `Edit data untuk menu "${menu?.name}"`
+                  : "Isi data menu baru untuk ditambahkan ke katalog"}
+              </DialogDescription>
+            </div>
+          </div>
         </DialogHeader>
 
         <form
           onSubmit={handleSubmit(handleFormSubmit)}
           className="space-y-4 py-2"
         >
-          {/* Nama */}
+          {/* Nama Menu */}
           <div className="space-y-1.5">
-            <Label className="text-slate-300 text-sm">Nama Menu</Label>
+            <Label className="text-foreground text-sm font-medium flex items-center gap-1">
+              Nama Menu
+            </Label>
             <Input
               placeholder="Nasi Goreng Spesial"
-              className="bg-slate-800 border-slate-700 text-white placeholder:text-slate-500 focus:border-amber-500"
+              className={cn(
+                "bg-background border-border text-foreground placeholder:text-muted-foreground",
+                "focus:border-heart-500 focus:ring-heart-500/20 transition-all",
+                errors.name &&
+                  "border-destructive focus:border-destructive focus:ring-destructive/20",
+              )}
               {...register("name")}
             />
             {errors.name && (
-              <p className="text-red-400 text-xs">{errors.name.message}</p>
+              <p className="text-destructive text-xs flex items-center gap-1 mt-1">
+                <span className="w-1 h-1 rounded-full bg-destructive" />
+                {errors.name.message}
+              </p>
             )}
           </div>
 
           {/* Deskripsi */}
           <div className="space-y-1.5">
-            <Label className="text-slate-300 text-sm">
+            <Label className="text-foreground text-sm font-medium">
               Deskripsi (opsional)
             </Label>
             <Textarea
               placeholder="Deskripsi singkat menu..."
               rows={3}
-              className="bg-slate-800 border-slate-700 text-white placeholder:text-slate-500 focus:border-amber-500 resize-none"
+              className="bg-background border-border text-foreground placeholder:text-muted-foreground focus:border-heart-500 focus:ring-heart-500/20 transition-all resize-none"
               {...register("description")}
             />
             {errors.description && (
-              <p className="text-red-400 text-xs">
+              <p className="text-destructive text-xs flex items-center gap-1 mt-1">
+                <span className="w-1 h-1 rounded-full bg-destructive" />
                 {errors.description.message}
               </p>
             )}
@@ -160,21 +198,35 @@ export function MenuFormDialog(props: Props) {
           {/* Harga + Kategori */}
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label className="text-slate-300 text-sm">Harga (Rp)</Label>
+              <Label className="text-foreground text-sm font-medium flex items-center gap-1">
+                <DollarSign className="w-3.5 h-3.5 text-muted-foreground" />
+                Harga (Rp)
+              </Label>
               <Input
                 type="number"
                 placeholder="35000"
                 min={0}
-                className="bg-slate-800 border-slate-700 text-white placeholder:text-slate-500 focus:border-amber-500"
+                className={cn(
+                  "bg-background border-border text-foreground placeholder:text-muted-foreground",
+                  "focus:border-heart-500 focus:ring-heart-500/20 transition-all",
+                  errors.price &&
+                    "border-destructive focus:border-destructive focus:ring-destructive/20",
+                )}
                 {...register("price")}
               />
               {errors.price && (
-                <p className="text-red-400 text-xs">{errors.price.message}</p>
+                <p className="text-destructive text-xs flex items-center gap-1 mt-1">
+                  <span className="w-1 h-1 rounded-full bg-destructive" />
+                  {errors.price.message}
+                </p>
               )}
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-slate-300 text-sm">Kategori</Label>
+              <Label className="text-foreground text-sm font-medium">
+                <Utensils className="w-3.5 h-3.5 text-muted-foreground" />
+                Kategori
+              </Label>
               <Controller
                 name="category"
                 control={control}
@@ -183,25 +235,59 @@ export function MenuFormDialog(props: Props) {
                     value={field.value ?? ""}
                     onValueChange={field.onChange}
                   >
-                    <SelectTrigger className="bg-slate-800 border-slate-700 text-slate-300">
+                    <SelectTrigger
+                      className={cn(
+                        "bg-background border-border text-foreground hover:bg-muted/50",
+                        "focus:border-heart-500 focus:ring-heart-500/20 transition-all",
+                        errors.category &&
+                          "border-destructive focus:border-destructive",
+                      )}
+                    >
                       <SelectValue placeholder="Pilih kategori" />
                     </SelectTrigger>
-                    <SelectContent className="bg-slate-900 border-slate-700">
-                      {allCategories.map((c) => (
-                        <SelectItem
-                          key={c}
-                          value={c}
-                          className="text-slate-300"
-                        >
-                          {c}
-                        </SelectItem>
-                      ))}
+                    <SelectContent className="bg-popover border-border max-h-62.5">
+                      {allCategories.map((c) => {
+                        const categoryColor =
+                          CATEGORY_COLORS[c.toLowerCase()] || "text-foreground";
+
+                        return (
+                          <SelectItem
+                            key={c}
+                            value={c}
+                            className={cn(
+                              "focus:bg-muted focus:text-foreground",
+                              categoryColor,
+                            )}
+                          >
+                            <div className="flex items-center gap-2">
+                              <span
+                                className={cn(
+                                  "w-2 h-2 rounded-full",
+                                  c.toLowerCase() === "makanan"
+                                    ? "bg-earth-500"
+                                    : c.toLowerCase() === "minuman"
+                                      ? "bg-heart-500"
+                                      : c.toLowerCase() === "snack"
+                                        ? "bg-glow-500"
+                                        : c.toLowerCase() === "dessert"
+                                          ? "bg-emerald-500"
+                                          : c.toLowerCase() === "paket"
+                                            ? "bg-purple-500"
+                                            : "bg-muted-foreground",
+                                )}
+                              />
+                              <span>{c}</span>
+                            </div>
+                          </SelectItem>
+                        );
+                      })}
                     </SelectContent>
                   </Select>
                 )}
               />
               {errors.category && (
-                <p className="text-red-400 text-xs">
+                <p className="text-destructive text-xs flex items-center gap-1 mt-1">
+                  <span className="w-1 h-1 rounded-full bg-destructive" />
                   {errors.category.message}
                 </p>
               )}
@@ -211,20 +297,22 @@ export function MenuFormDialog(props: Props) {
           {/* Stok + Waktu Persiapan */}
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label className="text-slate-300 text-sm">
+              <Label className="text-foreground text-sm font-medium flex items-center gap-1">
+                <Package className="w-3.5 h-3.5 text-muted-foreground" />
                 Stok (kosongkan = unlimited)
               </Label>
               <Input
                 type="number"
                 placeholder="Unlimited"
                 min={0}
-                className="bg-slate-800 border-slate-700 text-white placeholder:text-slate-500 focus:border-amber-500"
+                className="bg-background border-border text-foreground placeholder:text-muted-foreground focus:border-heart-500 focus:ring-heart-500/20 transition-all"
                 {...register("stock")}
               />
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-slate-300 text-sm">
+              <Label className="text-foreground text-sm font-medium flex items-center gap-1">
+                <Clock className="w-3.5 h-3.5 text-muted-foreground" />
                 Waktu Persiapan (menit)
               </Label>
               <Input
@@ -232,19 +320,19 @@ export function MenuFormDialog(props: Props) {
                 placeholder="15"
                 min={1}
                 max={120}
-                className="bg-slate-800 border-slate-700 text-white placeholder:text-slate-500 focus:border-amber-500"
+                className="bg-background border-border text-foreground placeholder:text-muted-foreground focus:border-heart-500 focus:ring-heart-500/20 transition-all"
                 {...register("preparation_time")}
               />
             </div>
           </div>
 
           {/* Toggle Tersedia */}
-          <div className="flex items-center justify-between p-3 rounded-lg bg-slate-800 border border-slate-700">
-            <div>
-              <p className="text-sm font-medium text-white">
+          <div className="flex items-center justify-between p-4 rounded-lg bg-muted/50 border border-border">
+            <div className="space-y-0.5">
+              <p className="text-sm font-medium text-foreground">
                 Tersedia untuk dipesan
               </p>
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-muted-foreground">
                 Tampilkan menu ini ke pelanggan
               </p>
             </div>
@@ -255,25 +343,31 @@ export function MenuFormDialog(props: Props) {
                 <Switch
                   checked={field.value}
                   onCheckedChange={field.onChange}
-                  className="data-[state=checked]:bg-amber-500"
+                  className="data-[state=checked]:bg-heart-500"
                 />
               )}
             />
           </div>
 
-          <DialogFooter>
+          <DialogFooter className="gap-2 sm:gap-0 mt-6">
             <Button
               type="button"
               variant="outline"
-              className="border-slate-700 text-slate-300 hover:bg-slate-800"
+              className="border-border text-foreground hover:bg-muted hover:text-foreground transition-all"
               onClick={handleClose}
+              disabled={props.isLoading}
             >
               Batal
             </Button>
             <Button
               type="submit"
               disabled={props.isLoading}
-              className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-semibold"
+              className={cn(
+                "transition-all min-w-30",
+                isEdit
+                  ? "bg-earth-500 hover:bg-earth-600 text-white"
+                  : "bg-heart-500 hover:bg-heart-600 text-white",
+              )}
             >
               {props.isLoading && (
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -281,7 +375,7 @@ export function MenuFormDialog(props: Props) {
               {props.isLoading
                 ? "Menyimpan..."
                 : isEdit
-                  ? "Simpan"
+                  ? "Simpan Perubahan"
                   : "Buat Menu"}
             </Button>
           </DialogFooter>

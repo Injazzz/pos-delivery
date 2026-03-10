@@ -1,23 +1,26 @@
-// src/pages/manager/dashboard/components/OrderStatusChart.tsx
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { DashboardSummary } from "@/types/dashboard";
+import { cn } from "@/lib/utils";
+import { useEffect, useState } from "react";
 
 interface Props {
   data?: DashboardSummary["orders"]["by_status"];
   isLoading: boolean;
 }
 
+// Status colors menggunakan CSS variables
 const STATUS_COLORS: Record<string, string> = {
-  pending: "#eab308",
-  processing: "#3b82f6",
-  cooking: "#f97316",
-  ready: "#10b981",
-  on_delivery: "#8b5cf6",
-  delivered: "#14b8a6",
-  cancelled: "#ef4444",
+  pending: "var(--glow-500)", // Kuning/emas
+  processing: "var(--heart-400)", // Merah muda
+  cooking: "var(--earth-500)", // Coklat/oranye
+  ready: "var(--heart-600)", // Merah maroon
+  on_delivery: "var(--earth-400)", // Coklat muda
+  delivered: "var(--success-500)", // Hijau
+  cancelled: "var(--error-500)", // Merah
 };
 
 const STATUS_LABELS: Record<string, string> = {
@@ -30,85 +33,204 @@ const STATUS_LABELS: Record<string, string> = {
   cancelled: "Batal",
 };
 
+// Background colors untuk legend
+const STATUS_BG_COLORS: Record<string, string> = {
+  pending: "bg-glow-500/20",
+  processing: "bg-heart-400/20",
+  cooking: "bg-earth-500/20",
+  ready: "bg-heart-600/20",
+  on_delivery: "bg-earth-400/20",
+  delivered: "bg-success-500/20",
+  cancelled: "bg-error-500/20",
+};
+
 export function OrderStatusChart({ data, isLoading }: Props) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const chartData = data
     ? Object.entries(data)
         .filter(([, v]) => v > 0)
         .map(([key, value]) => ({
           name: STATUS_LABELS[key] ?? key,
           value,
-          color: STATUS_COLORS[key] ?? "#64748b",
+          color: STATUS_COLORS[key] ?? "var(--muted-foreground)",
+          bgColor: STATUS_BG_COLORS[key] ?? "bg-muted",
+          statusKey: key,
         }))
     : [];
 
   const total = chartData.reduce((s, d) => s + d.value, 0);
 
+  // Custom tooltip component
+  const CustomTooltip = ({ active, payload }: any) => {
+    if (!active || !payload?.length || !mounted) return null;
+
+    const data = payload[0].payload;
+
+    return (
+      <div className="bg-card border border-border rounded-lg p-3 shadow-xl text-xs">
+        <p className="text-muted-foreground mb-2 font-medium">{data.name}</p>
+        <p className="font-semibold" style={{ color: data.color }}>
+          {data.value} order ({((data.value / total) * 100).toFixed(1)}%)
+        </p>
+      </div>
+    );
+  };
+
+  if (!mounted) {
+    return (
+      <Card className="bg-card border-border">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-foreground text-sm font-semibold">
+            Status Order Aktif
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Skeleton className="h-52 w-full bg-muted rounded-lg" />
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
-    <Card className="bg-slate-900 border-slate-800">
-      <CardHeader className="pb-2">
-        <CardTitle className="text-white text-sm font-semibold">
-          Status Order Aktif
-        </CardTitle>
+    <Card className="bg-card border-border overflow-hidden">
+      <CardHeader className="pb-2 border-b border-border bg-muted/30">
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-foreground text-sm font-semibold flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-heart-500 animate-pulse" />
+            Status Order Aktif
+          </CardTitle>
+          {total > 0 && (
+            <span className="text-[10px] text-muted-foreground bg-muted px-2 py-1 rounded-full">
+              Total: {total} order
+            </span>
+          )}
+        </div>
       </CardHeader>
-      <CardContent>
+
+      <CardContent className="p-4">
         {isLoading ? (
-          <Skeleton className="h-52 w-full bg-slate-800 rounded-lg" />
+          <div className="space-y-3">
+            <Skeleton className="h-40 w-40 mx-auto rounded-full bg-muted" />
+            <div className="space-y-2">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <Skeleton key={i} className="h-8 w-full bg-muted" />
+              ))}
+            </div>
+          </div>
         ) : total === 0 ? (
-          <div className="h-52 flex items-center justify-center text-slate-500 text-sm">
-            Belum ada data
+          <div className="h-52 flex flex-col items-center justify-center text-muted-foreground">
+            <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-3">
+              <span className="text-2xl">📊</span>
+            </div>
+            <p className="text-sm font-medium mb-1">Belum ada data</p>
+            <p className="text-xs text-muted-foreground">
+              Status order akan muncul di sini
+            </p>
           </div>
         ) : (
-          <div className="flex items-center gap-4">
-            <ResponsiveContainer width="50%" height={180}>
-              <PieChart>
-                <Pie
-                  data={chartData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={45}
-                  outerRadius={75}
-                  paddingAngle={3}
-                  dataKey="value"
-                >
-                  {chartData.map((entry, i) => (
-                    <Cell key={i} fill={entry.color} stroke="transparent" />
-                  ))}
-                </Pie>
-                <Tooltip
-                  contentStyle={{
-                    background: "#1e293b",
-                    border: "1px solid #334155",
-                    borderRadius: "8px",
-                    fontSize: "12px",
-                  }}
-                  labelStyle={{ color: "#f1f5f9" }}
-                />
-              </PieChart>
-            </ResponsiveContainer>
+          <div className="flex flex-col md:flex-row items-center gap-6">
+            {/* Pie Chart */}
+            <div className="relative">
+              <ResponsiveContainer width={200} height={200}>
+                <PieChart>
+                  <Pie
+                    data={chartData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={85}
+                    paddingAngle={2}
+                    dataKey="value"
+                    startAngle={90}
+                    endAngle={-270}
+                  >
+                    {chartData.map((entry, i) => (
+                      <Cell
+                        key={i}
+                        fill={entry.color}
+                        stroke="transparent"
+                        className="transition-all duration-300 hover:opacity-80 hover:scale-105"
+                      />
+                    ))}
+                  </Pie>
+                  <Tooltip content={<CustomTooltip />} />
+                </PieChart>
+              </ResponsiveContainer>
 
-            {/* Legend */}
-            <div className="flex-1 space-y-1.5">
-              {chartData.map((d) => (
-                <div
-                  key={d.name}
-                  className="flex items-center justify-between gap-2"
-                >
-                  <div className="flex items-center gap-2">
-                    <div
-                      className="w-2.5 h-2.5 rounded-full shrink-0"
-                      style={{ background: d.color }}
-                    />
-                    <span className="text-xs text-slate-400">{d.name}</span>
+              {/* Center text */}
+              <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                <span className="text-2xl font-bold text-foreground">
+                  {total}
+                </span>
+                <span className="text-[10px] text-muted-foreground">Total</span>
+              </div>
+            </div>
+
+            {/* Legend dengan persentase */}
+            <div className="flex-1 w-full space-y-2.5">
+              {chartData.map((d) => {
+                const percentage = ((d.value / total) * 100).toFixed(1);
+
+                return (
+                  <div
+                    key={d.name}
+                    className="flex items-center justify-between gap-2 p-2 rounded-lg hover:bg-muted/50 transition-colors"
+                  >
+                    <div className="flex items-center gap-2 min-w-0 flex-1">
+                      <div
+                        className={cn(
+                          "w-3 h-3 rounded-full shrink-0",
+                          d.bgColor,
+                        )}
+                        style={{
+                          backgroundColor: d.color,
+                          boxShadow: `0 0 10px ${d.color}40`,
+                        }}
+                      />
+                      <span className="text-xs text-foreground truncate">
+                        {d.name}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-3 shrink-0">
+                      <span className="text-xs font-medium text-muted-foreground">
+                        {percentage}%
+                      </span>
+                      <span
+                        className="text-xs font-semibold min-w-7.5 text-right"
+                        style={{ color: d.color }}
+                      >
+                        {d.value}
+                      </span>
+                    </div>
                   </div>
-                  <span className="text-xs font-semibold text-white">
-                    {d.value}
-                  </span>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}
       </CardContent>
+
+      {/* Progress bar untuk total */}
+      {total > 0 && !isLoading && (
+        <div className="h-1 w-full bg-muted overflow-hidden">
+          {chartData.map((d, i) => (
+            <div
+              key={i}
+              className="h-full float-left transition-all duration-500"
+              style={{
+                width: `${(d.value / total) * 100}%`,
+                backgroundColor: d.color,
+              }}
+            />
+          ))}
+        </div>
+      )}
     </Card>
   );
 }

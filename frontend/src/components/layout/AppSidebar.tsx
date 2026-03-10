@@ -16,6 +16,8 @@ import {
   AlertCircle,
   List,
   History,
+  BadgeCheck,
+  ChevronsUpDown,
 } from "lucide-react";
 import {
   Sidebar,
@@ -28,7 +30,17 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
   SidebarHeader,
+  useSidebar,
 } from "@/components/ui/sidebar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -43,6 +55,8 @@ import { Button } from "@/components/ui/button";
 import { useAuthStore } from "@/stores/authStore";
 import { OfflineIndicator } from "@/components/shared/OfflineBanner";
 import { PWAInstallButton } from "@/components/shared/PWAInstallBanner";
+import { ConnectionStatus } from "../shared/LiveBagde";
+import { cn } from "@/lib/utils";
 
 // ─── Nav items per role ────────────────────────────────────────────────────────
 
@@ -68,7 +82,6 @@ const COURIER_NAV = [
   { title: "Dashboard", url: "/courier/dashboard", icon: LayoutDashboard },
   { title: "Pesanan Ditugaskan", url: "/courier/assigned", icon: List },
   { title: "Riwayat Pengiriman", url: "/courier/history", icon: History },
-  // { title: "Pengiriman", url: "/courier/deliveries", icon: Truck },
 ];
 
 const CUSTOMER_NAV = [
@@ -77,21 +90,48 @@ const CUSTOMER_NAV = [
 ];
 
 function NavItems({ items }: { items: typeof MANAGER_NAV }) {
+  const { state } = useSidebar();
+  const isCollapsed = state === "collapsed";
+
   return (
-    <SidebarMenu>
+    <SidebarMenu
+      className={`flex ${isCollapsed ? "justify-center items-center" : "gap-1"}`}
+    >
       {items.map((item) => (
         <SidebarMenuItem key={item.url}>
-          <SidebarMenuButton asChild>
+          <SidebarMenuButton
+            asChild
+            tooltip={isCollapsed ? item.title : undefined}
+            className="w-full flex items-center justify-start gap-3 px-3 py-2"
+          >
             <NavLink
               to={item.url}
               className={({ isActive }) =>
-                isActive
-                  ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
-                  : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
+                cn(
+                  "flex items-center gap-3 w-full",
+                  isActive
+                    ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+                    : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50",
+                )
               }
             >
-              <item.icon className="size-4" />
-              <span>{item.title}</span>
+              {({ isActive }) => (
+                <>
+                  <item.icon
+                    className={cn(
+                      "size-5 shrink-0",
+                      isActive && "text-amber-500",
+                    )}
+                  />
+                  {!isCollapsed && (
+                    <span
+                      className={cn("truncate", isActive && "text-amber-500")}
+                    >
+                      {item.title}
+                    </span>
+                  )}
+                </>
+              )}
             </NavLink>
           </SidebarMenuButton>
         </SidebarMenuItem>
@@ -100,13 +140,147 @@ function NavItems({ items }: { items: typeof MANAGER_NAV }) {
   );
 }
 
-// ─── Main Sidebar ─────────────────────────────────────────────────────────────
+// ─── Nav User dengan Dropdown ─────────────────────────────────────────────────
 
-export function AppSidebar() {
+function NavUser() {
   const { user, logout } = useAuthStore();
+  const { isMobile, state } = useSidebar();
   const navigate = useNavigate();
   const [showLogoutDialog, setShowLogoutDialog] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const isCollapsed = state === "collapsed";
+
+  const handleLogout = async () => {
+    setIsLoggingOut(true);
+    try {
+      await logout();
+      navigate("/login");
+    } finally {
+      setIsLoggingOut(false);
+      setShowLogoutDialog(false);
+    }
+  };
+
+  if (!user) return null;
+
+  return (
+    <>
+      <SidebarMenu>
+        <SidebarMenuItem>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <SidebarMenuButton
+                size="lg"
+                className={`data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground ${
+                  isCollapsed ? "justify-center px-2 overflow-visible" : ""
+                }`}
+              >
+                <div className="relative overflow-visible">
+                  <Avatar className="h-8 w-8 rounded-lg shrink-0">
+                    <AvatarFallback className="bg-primary/20 text-primary text-xs">
+                      {user?.name?.slice(0, 2).toUpperCase() ?? "U"}
+                    </AvatarFallback>
+                  </Avatar>
+                  <ConnectionStatus className="absolute -bottom-0.5 -right-0.5" />
+                </div>
+
+                {!isCollapsed && (
+                  <>
+                    <div className="grid flex-1 text-left text-sm leading-tight">
+                      <span className="truncate font-medium">{user.name}</span>
+                      <span className="truncate text-xs text-sidebar-foreground/50">
+                        {user.email}
+                      </span>
+                    </div>
+                    <ChevronsUpDown className="ml-auto size-4" />
+                  </>
+                )}
+              </SidebarMenuButton>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg"
+              side={isMobile ? "bottom" : "right"}
+              align="end"
+              sideOffset={4}
+            >
+              <DropdownMenuLabel className="p-0 font-normal">
+                <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
+                  <Avatar className="h-8 w-8 rounded-lg">
+                    <AvatarFallback className="bg-accent text-accent-foreground">
+                      {user?.name?.slice(0, 2).toUpperCase() ?? "U"}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="grid flex-1 text-left text-sm leading-tight">
+                    <span className="truncate font-medium">{user.name}</span>
+                    <span className="truncate text-xs text-muted-foreground">
+                      {user.email}
+                    </span>
+                  </div>
+                </div>
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuGroup>
+                <DropdownMenuItem onClick={() => (window.location.href = "#")}>
+                  <BadgeCheck className="mr-2 h-4 w-4" />
+                  <span>Akun</span>
+                </DropdownMenuItem>
+              </DropdownMenuGroup>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                className="text-primary focus:text-primary focus:bg-primary/10"
+                onClick={() => setShowLogoutDialog(true)}
+              >
+                <LogOut className="mr-2 h-4 w-4" />
+                <span>Log out</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </SidebarMenuItem>
+      </SidebarMenu>
+
+      {/* Logout Confirmation Dialog */}
+      <Dialog open={showLogoutDialog} onOpenChange={setShowLogoutDialog}>
+        <DialogContent className="bg-card border-border sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="text-foreground flex items-center gap-2">
+              <AlertCircle className="w-5 h-5 text-accent" />
+              Konfirmasi Logout
+            </DialogTitle>
+            <DialogDescription className="text-muted-foreground">
+              Anda yakin ingin keluar dari aplikasi?
+            </DialogDescription>
+          </DialogHeader>
+
+          <DialogFooter className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setShowLogoutDialog(false)}
+              disabled={isLoggingOut}
+              className="bg-muted border-border text-muted-foreground hover:bg-muted/80"
+            >
+              Batal
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleLogout}
+              disabled={isLoggingOut}
+              className="bg-primary hover:bg-primary/90 text-primary-foreground"
+            >
+              {isLoggingOut ? "Logging out..." : "Ya, Logout"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
+
+// ─── Main Sidebar ─────────────────────────────────────────────────────────────
+
+export function AppSidebar() {
+  const { user } = useAuthStore();
+  const { state } = useSidebar();
+  const isCollapsed = state === "collapsed";
 
   const role = user?.role ?? "pelanggan";
   const navItems =
@@ -125,116 +299,57 @@ export function AppSidebar() {
     pelanggan: "Pelanggan",
   };
 
-  const handleLogoutConfirm = async () => {
-    setIsLoggingOut(true);
-    try {
-      await logout();
-      navigate("/login");
-    } finally {
-      setIsLoggingOut(false);
-      setShowLogoutDialog(false);
-    }
-  };
-
   return (
-    <>
-      <Sidebar>
-        {/* Header */}
-        <SidebarHeader className="px-4 py-3">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-amber-500 flex items-center justify-center">
-              <UtensilsCrossed className="w-4 h-4 text-white" />
-            </div>
+    <Sidebar collapsible="icon">
+      {/* Header */}
+      <SidebarHeader className="px-4 py-4">
+        <div
+          className={`flex items-center ${isCollapsed ? "justify-center" : "gap-3"}`}
+        >
+          <div className="w-8 h-8 rounded-lg bg-accent flex items-center justify-center shrink-0">
+            <UtensilsCrossed className="w-4 h-4 text-accent-foreground" />
+          </div>
+          {!isCollapsed && (
             <div>
               <p className="text-sm font-bold leading-tight">POS App</p>
               <p className="text-[10px] text-sidebar-foreground/50 capitalize">
                 {roleLabel[role]}
               </p>
             </div>
-          </div>
-        </SidebarHeader>
+          )}
+        </div>
+      </SidebarHeader>
 
-        <Separator className="opacity-20" />
+      <Separator className="opacity-20" />
 
-        {/* Nav */}
-        <SidebarContent className="px-2 py-2">
-          <SidebarGroup>
+      {/* Nav */}
+      <SidebarContent className="px-2 py-2">
+        <SidebarGroup>
+          {!isCollapsed && (
             <SidebarGroupLabel className="text-[10px] uppercase tracking-wider text-sidebar-foreground/40 px-2 mb-1">
               Menu
             </SidebarGroupLabel>
-            <SidebarGroupContent>
-              <NavItems items={navItems} />
-            </SidebarGroupContent>
-          </SidebarGroup>
-        </SidebarContent>
+          )}
+          <SidebarGroupContent>
+            <NavItems items={navItems} />
+          </SidebarGroupContent>
+        </SidebarGroup>
+      </SidebarContent>
 
-        {/* Footer */}
-        <SidebarFooter className="px-3 pb-4 space-y-3">
-          {/* Offline status */}
-          <OfflineIndicator />
-
-          {/* PWA install button */}
-          <PWAInstallButton />
-
-          <Separator className="opacity-20" />
-
-          {/* User info */}
-          <div className="flex items-center gap-2">
-            <Avatar className="w-8 h-8">
-              <AvatarFallback className="bg-slate-700 text-white text-xs">
-                {user?.name?.slice(0, 2).toUpperCase() ?? "U"}
-              </AvatarFallback>
-            </Avatar>
-            <div className="flex-1 min-w-0">
-              <p className="text-xs font-medium truncate">{user?.name}</p>
-              <p className="text-[10px] text-sidebar-foreground/50 truncate">
-                {user?.email}
-              </p>
-            </div>
-            <button
-              onClick={() => setShowLogoutDialog(true)}
-              className="text-sidebar-foreground/40 hover:text-red-400 transition-colors p-1 hover:bg-red-500/10 rounded"
-              title="Logout"
-            >
-              <LogOut className="w-4 h-4" />
-            </button>
+      {/* Footer dengan Dropdown Menu */}
+      <SidebarFooter className="p-2">
+        {/* Offline status dan PWA button - hanya tampil jika tidak collapsed */}
+        {!isCollapsed && (
+          <div className="space-y-3 mb-3 px-1">
+            <OfflineIndicator />
+            <PWAInstallButton />
+            <Separator className="opacity-20" />
           </div>
-        </SidebarFooter>
-      </Sidebar>
+        )}
 
-      {/* Logout Confirmation Dialog */}
-      <Dialog open={showLogoutDialog} onOpenChange={setShowLogoutDialog}>
-        <DialogContent className="bg-slate-900 border-slate-700 sm:max-w-sm">
-          <DialogHeader>
-            <DialogTitle className="text-white flex items-center gap-2">
-              <AlertCircle className="w-5 h-5 text-amber-400" />
-              Konfirmasi Logout
-            </DialogTitle>
-            <DialogDescription className="text-slate-300">
-              Anda yakin ingin keluar dari aplikasi?
-            </DialogDescription>
-          </DialogHeader>
-
-          <DialogFooter className="flex gap-2">
-            <Button
-              variant="outline"
-              onClick={() => setShowLogoutDialog(false)}
-              disabled={isLoggingOut}
-              className="bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700"
-            >
-              Batal
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={handleLogoutConfirm}
-              disabled={isLoggingOut}
-              className="bg-red-600 hover:bg-red-700 text-white"
-            >
-              {isLoggingOut ? "Logging out..." : "Ya, Logout"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </>
+        {/* NavUser dengan Dropdown */}
+        <NavUser />
+      </SidebarFooter>
+    </Sidebar>
   );
 }
