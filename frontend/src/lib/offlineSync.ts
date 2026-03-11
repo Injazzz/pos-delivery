@@ -81,6 +81,7 @@ export async function cacheMenusForOffline(): Promise<void> {
       .flat()
       .map((m: unknown) => {
         const item = m as Record<string, unknown>;
+        const imageArray = item.images as string[] | null;
         return {
           id: item.id as number,
           name: item.name as string,
@@ -89,6 +90,10 @@ export async function cacheMenusForOffline(): Promise<void> {
           category: item.category as string,
           is_available: item.is_available as boolean,
           image_url: (item.first_image_url || item.image_url) as string | null,
+          stock: item.stock as number,
+          preparation_time: (item.preparation_time as number | null) ?? 0,
+          first_image_url: item.first_image_url as string | null,
+          images: imageArray?.map((url) => ({ url })) ?? [],
           cachedAt: new Date().toISOString(),
         };
       });

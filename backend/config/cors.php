@@ -19,16 +19,26 @@ return [
 
     'allowed_origins' => [
         'http://localhost:5173',
+        'http://localhost:5174',
+        'http://localhost:5175',
         'http://localhost:3000',
         'http://127.0.0.1:5173',
+        'http://127.0.0.1:5174',
+        'http://127.0.0.1:5175',
         'http://127.0.0.1:3000',
     ],
 
-    'allowed_origins_patterns' => [],
+    // Allow ngrok URLs patterns - untuk development
+    'allowed_origins_patterns' => [
+        '#^https://.*\.ngrok(?:-free)?\.dev$#',  // ngrok-free.dev
+        '#^https://.*\.ngrok\.io$#',              // ngrok.io
+    ],
 
-    'allowed_headers' => ['*'],
+    'allowed_methods' => ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
 
-    'exposed_headers' => [],
+    'allowed_headers' => ['Content-Type', 'Authorization', 'X-XSRF-TOKEN', 'Accept', 'X-Requested-With'],
+
+    'exposed_headers' => ['Content-Type', 'Authorization'],
 
     'max_age' => 0,
 

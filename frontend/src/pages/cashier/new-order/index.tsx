@@ -108,7 +108,12 @@ export default function NewOrderPage() {
       order_type: orderType as "dine_in" | "take_away" | "delivery",
       items: items.map((i) => ({
         menu_id: i.menu.id,
-        qty: i.qty,
+        qty: i.qty, // untuk kompatibilitas
+        quantity: i.qty, // field utama untuk quantity
+        name: i.menu.name,
+        price: i.menu.price,
+        images: i.menu.images || [],
+        first_image_url: i.menu.first_image_url,
         ...(i.note ? { note: i.note } : {}),
       })),
       ...(notes ? { notes } : {}),
@@ -155,16 +160,6 @@ export default function NewOrderPage() {
             </h1>
 
             <div className="flex items-center gap-2">
-              {isOfflineMode && (
-                <Badge
-                  variant="outline"
-                  className="bg-glow-500/10 text-glow-600 dark:text-glow-400 border-glow-500/30 gap-1.5 px-3 py-1"
-                >
-                  <WifiOff className="h-3.5 w-3.5" />
-                  Mode Offline
-                </Badge>
-              )}
-
               {pendingCount > 0 && (
                 <Badge
                   variant="outline"

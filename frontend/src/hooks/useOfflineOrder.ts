@@ -7,8 +7,14 @@ import { useOffline } from "./useOffline";
 
 interface OrderItemPayload {
   menu_id: number;
-  qty: number;
+  quantity: number;
+  qty?: number; // untuk backward compatibility jika ada
+  name?: string; // nama menu untuk referensi offline
+  price?: number; // harga untuk perhitungan total offline
   note?: string;
+  images?: Array<{ url: string; thumb?: string; medium?: string }>;
+  first_image_url?: string;
+  [key: string]: unknown; // allow additional fields
 }
 
 interface CreateOrderPayload {

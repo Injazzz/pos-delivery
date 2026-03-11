@@ -7,6 +7,7 @@ import {
   CheckCircle,
   Truck,
   X,
+  ChefHat,
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -229,6 +230,3 @@ export default function CustomerOrders() {
     </div>
   );
 }
-
-// Import ChefHat
-import { ChefHat } from "lucide-react";

@@ -34,19 +34,22 @@ export default defineConfig({
               cacheableResponse: { statuses: [0, 200] },
             },
           },
-          // API: Orders — Network First (harus fresh)
+          // API: Orders — Network First (harus fresh - NEVER CACHE API ERRORS)
           {
             urlPattern:
               /^https?:\/\/.*\/api\/(customer|cashier|manager)\/orders(\?.*)?$/,
             handler: "NetworkFirst",
             options: {
-              cacheName: "api-orders",
+              cacheName: "api-orders-v2",
               networkTimeoutSeconds: 5,
               expiration: {
                 maxEntries: 50,
-                maxAgeSeconds: 60 * 5, // 5 menit
+                maxAgeSeconds: 60 * 2, // 2 menit saja
               },
-              cacheableResponse: { statuses: [0, 200] },
+              cacheableResponse: {
+                statuses: [200],
+                headers: { "Access-Control-Allow-Credentials": "true" },
+              },
             },
           },
           // API: Dashboard — Network First

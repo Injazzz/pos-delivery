@@ -1,12 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
-import {
-  RefreshCw,
-  Trash2,
-  Send,
-  WifiOff,
-  Clock,
-  AlertCircle,
-} from "lucide-react";
+import { RefreshCw, Trash2, Send, Clock, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -61,19 +54,26 @@ export default function PendingOrdersPage() {
 
   const getOrderItems = (order: PendingOrder) => {
     const payload = order.payload as {
-      items?: Array<{ name: string; quantity: number }>;
+      items?: Array<{
+        name: string;
+        quantity: number;
+        price: number;
+        images?: Array<{ url: string; thumb?: string; medium?: string }>;
+        first_image_url?: string;
+      }>;
     };
     return payload.items ?? [];
   };
 
   const getOrderTotal = (order: PendingOrder) => {
     const payload = order.payload as {
-      items?: Array<{ price: number; quantity: number }>;
+      items?: Array<{ price?: number; quantity?: number }>;
     };
-    return (payload.items ?? []).reduce(
-      (sum, item) => sum + item.price * item.quantity,
-      0,
-    );
+    return (payload.items ?? []).reduce((sum, item) => {
+      const price = item.price || 0;
+      const quantity = item.quantity || 0;
+      return sum + price * quantity;
+    }, 0);
   };
 
   return (
@@ -122,7 +122,7 @@ export default function PendingOrdersPage() {
           </div>
         </div>
 
-        {/* Status Banner */}
+        {/* Status Banner
         {!isOnline && (
           <div className="flex items-center gap-3 p-4 rounded-lg bg-glow-500/10 border border-glow-500/30 text-glow-600">
             <WifiOff className="h-5 w-5 shrink-0" />
@@ -130,7 +130,7 @@ export default function PendingOrdersPage() {
               Tidak ada koneksi. Pesanan akan otomatis dikirim saat online.
             </span>
           </div>
-        )}
+        )} */}
 
         {/* Stats */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -267,12 +267,34 @@ export default function PendingOrdersPage() {
                     </div>
                   </CardHeader>
                   <CardContent className="pt-4">
-                    <div className="text-xs text-muted-foreground space-y-1 mb-3">
+                    <div className="space-y-2 mb-3">
                       {items.map((item, i) => (
-                        <div key={i} className="flex justify-between">
-                          <span>
-                            {item.quantity}x {item.name}
-                          </span>
+                        <div
+                          key={i}
+                          className="flex items-center gap-2 text-xs"
+                        >
+                          {item.first_image_url && (
+                            <img
+                              src={item.first_image_url}
+                              alt={item.name}
+                              className="w-10 h-10 rounded-md object-cover bg-muted border border-border"
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).style.display =
+                                  "none";
+                              }}
+                            />
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <div className="text-muted-foreground">
+                              {item.quantity}x {item.name}
+                            </div>
+                            <div className="text-heart-600 dark:text-heart-400 font-semibold">
+                              Rp{" "}
+                              {(item.price * item.quantity).toLocaleString(
+                                "id-ID",
+                              )}
+                            </div>
+                          </div>
                         </div>
                       ))}
                     </div>

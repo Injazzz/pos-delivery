@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Order;
 use App\Models\Payment;
+use Illuminate\Support\Facades\Log;
 use Midtrans\Config;
 use Midtrans\Snap;
 use Midtrans\Notification;
@@ -15,8 +16,8 @@ class MidtransService
         Config::$serverKey    = config('services.midtrans.server_key');
         Config::$clientKey    = config('services.midtrans.client_key');
         Config::$isProduction = config('services.midtrans.is_production', false);
-        Config::$isSanitized  = true;
-        Config::$is3ds        = true;
+        Config::$isSanitized  = config('services.midtrans.is_sanitized', true);
+        Config::$is3ds        = config('services.midtrans.is_3ds', true);
     }
 
     /**
@@ -36,7 +37,7 @@ class MidtransService
             ],
             'item_details' => $this->buildItemDetails($order, $payment),
             'callbacks' => [
-                'finish' => config('app.frontend_url') . '/my-orders',
+                'finish' => config('midtrans.callback.finish_url'),
             ],
         ];
 
@@ -45,19 +46,36 @@ class MidtransService
 
     /**
      * Handle webhook notification dari Midtrans
+     * @param array $requestData Data dari request (request()->all())
      */
-    public function handleNotification(): array
+    public function handleNotification(array $requestData = []): array
     {
-        $notif = new Notification();
+        // Jika tidak ada data, coba baca dari php://input (backwards compatible)
+        if (empty($requestData)) {
+            $notif = new Notification();
+            $data = [
+                'order_id'          => $notif->order_id,
+                'transaction_id'    => $notif->transaction_id,
+                'transaction_status'=> $notif->transaction_status,
+                'fraud_status'      => $notif->fraud_status ?? null,
+                'payment_type'      => $notif->payment_type,
+                'gross_amount'      => (int)$notif->gross_amount,
+            ];
+        } else {
+            // Gunakan data dari request secara langsung (keep gross_amount as string for signature verification)
+            $data = [
+                'order_id'          => $requestData['order_id'] ?? null,
+                'transaction_id'    => $requestData['transaction_id'] ?? null,
+                'transaction_status'=> $requestData['transaction_status'] ?? null,
+                'fraud_status'      => $requestData['fraud_status'] ?? null,
+                'payment_type'      => $requestData['payment_type'] ?? null,
+                'gross_amount'      => (string)($requestData['gross_amount'] ?? '0'),
+            ];
+        }
 
-        return [
-            'order_id'          => $notif->order_id,
-            'transaction_id'    => $notif->transaction_id,
-            'transaction_status'=> $notif->transaction_status,
-            'fraud_status'      => $notif->fraud_status,
-            'payment_type'      => $notif->payment_type,
-            'gross_amount'      => $notif->gross_amount,
-        ];
+        Log::debug('Midtrans notification parsed', $data);
+
+        return $data;
     }
 
     /**

@@ -1,13 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import {
   Loader2,
-  ExternalLink,
   CreditCard,
   QrCode,
   Landmark,
   Wallet,
+  ExternalLink,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -44,6 +44,7 @@ export function MidtransPayment({
 }: Props) {
   const [snapLoaded, setSnapLoaded] = useState(false);
   const [isOpening, setIsOpening] = useState(false);
+  const snapPayCalledRef = useRef(false);
 
   // Load Midtrans Snap.js dynamically
   useEffect(() => {
@@ -68,6 +69,22 @@ export function MidtransPayment({
       /* jangan remove, biarkan cached */
     };
   }, [snapData]);
+
+  // Auto-open snap payment when loaded (with delay for safety)
+  useEffect(() => {
+    if (!snapLoaded || !snapData || snapPayCalledRef.current) return;
+    if (!window.snap) return;
+
+    // Add small delay to ensure snap is fully ready
+    const timeout = setTimeout(() => {
+      if (snapPayCalledRef.current) return;
+      snapPayCalledRef.current = true;
+      openSnap();
+    }, 500);
+
+    return () => clearTimeout(timeout);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [snapLoaded, snapData]);
 
   const openSnap = () => {
     if (!snapData || !window.snap) return;
@@ -172,20 +189,23 @@ export function MidtransPayment({
           "w-full h-12 text-white font-bold gap-2 transition-all",
           "bg-linear-to-r from-heart-500 to-heart-600 hover:from-heart-600 hover:to-heart-700",
           "relative overflow-hidden group",
-          (!snapLoaded || isOpening) && "opacity-70 cursor-wait",
+          isOpening && "opacity-70 cursor-wait",
         )}
-        disabled={!snapLoaded || isOpening}
+        disabled={isOpening}
         onClick={openSnap}
       >
         {/* Shine effect */}
         <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full bg-linear-to-r from-transparent via-white/20 to-transparent transition-transform duration-1000" />
 
-        {!snapLoaded || isOpening ? (
+        {isOpening ? (
           <>
             <Loader2 className="w-4 h-4 animate-spin" />
-            <span>
-              {!snapLoaded ? "Memuat Midtrans..." : "Membuka Pembayaran..."}
-            </span>
+            <span>Membuka Pembayaran...</span>
+          </>
+        ) : !snapLoaded ? (
+          <>
+            <Loader2 className="w-4 h-4 animate-spin" />
+            <span>Memuat Midtrans...</span>
           </>
         ) : (
           <>

@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
+import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
@@ -24,6 +25,7 @@ import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { OrderStatusBadge } from "@/components/shared/OrderStatusBadge";
 import { OrderTimeline } from "./OrderTimeline";
+import { CustomerPaymentDialog } from "./CustomerPaymentDialog";
 import { ordersApi } from "@/api/orders";
 import { cn } from "@/lib/utils";
 import type { Order } from "@/types/order";
@@ -61,6 +63,7 @@ const TYPE_CONFIG: Record<
 
 export function OrderDetailDialog({ order, onClose, onReview }: Props) {
   const qc = useQueryClient();
+  const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
 
   const receivedMutation = useMutation({
     mutationFn: (id: number) => ordersApi.customerMarkReceived(id),
@@ -76,6 +79,11 @@ export function OrderDetailDialog({ order, onClose, onReview }: Props) {
 
   const canMarkReceived = order.status === "delivered" && !order.review;
   const canReview = order.status === "delivered" && !order.review;
+  const canPayNow =
+    order.payment?.status !== "paid" &&
+    (order.status === "pending" ||
+      order.status === "cooking" ||
+      order.status === "on_delivery");
   const typeConfig = TYPE_CONFIG[order.order_type] || TYPE_CONFIG.dine_in;
   const TypeIcon = typeConfig.icon;
 
@@ -257,8 +265,17 @@ export function OrderDetailDialog({ order, onClose, onReview }: Props) {
           </div>
 
           {/* Actions */}
-          {(canMarkReceived || canReview) && (
+          {(canMarkReceived || canReview || canPayNow) && (
             <div className="flex flex-col sm:flex-row gap-2 pt-2">
+              {canPayNow && (
+                <Button
+                  className="flex-1 bg-glow-500 hover:bg-glow-600 text-white gap-2"
+                  onClick={() => setPaymentDialogOpen(true)}
+                >
+                  <CreditCard className="w-4 h-4" />
+                  <span>Bayar Sekarang</span>
+                </Button>
+              )}
               {canMarkReceived && (
                 <Button
                   className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white gap-2"
@@ -292,6 +309,17 @@ export function OrderDetailDialog({ order, onClose, onReview }: Props) {
           )}
         </div>
       </DialogContent>
+
+      {/* Payment Dialog */}
+      <CustomerPaymentDialog
+        order={order}
+        open={paymentDialogOpen}
+        onOpenChange={setPaymentDialogOpen}
+        onPaymentSuccess={() => {
+          qc.invalidateQueries({ queryKey: ["customer-orders"] });
+          onClose();
+        }}
+      />
     </Dialog>
   );
 }

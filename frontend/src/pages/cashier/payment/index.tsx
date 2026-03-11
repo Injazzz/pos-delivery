@@ -479,9 +479,7 @@ export default function CashierPayment() {
                     <MidtransPayment
                       snapData={snapData}
                       onSuccess={() => {
-                        toast.success(
-                          "Pembayaran berhasil! Menunggu konfirmasi webhook.",
-                        );
+                        toast.success("Pembayaran berhasil!");
                         // Refresh data berdasarkan tipe pembayaran
                         if (
                           snapPaymentType === "dp" ||

@@ -37,6 +37,15 @@ let echoInstance: EchoInstance | null = null;
 export function getEcho(): EchoInstance {
   if (echoInstance) return echoInstance;
 
+  // ⚠️ Skip Reverb initialization jika DISABLED
+  const reverbHost = import.meta.env.VITE_REVERB_HOST;
+  if (!reverbHost || reverbHost === "disabled") {
+    console.warn(
+      "[Echo] REVERB_HOST disabled - real-time features not available",
+    );
+    return {} as EchoInstance;
+  }
+
   window.Pusher = Pusher;
 
   const apiBaseUrl =
@@ -68,6 +77,7 @@ export function getEcho(): EchoInstance {
 
 export function updateEchoToken(token: string) {
   if (!echoInstance) return;
+  if (!echoInstance.options) return; // Handle disabled reverb
 
   // Karena kita sudah melakukan cast di atas, TypeScript sekarang tahu struktur options
   echoInstance.options.auth.headers.Authorization = `Bearer ${token}`;

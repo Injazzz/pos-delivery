@@ -12,9 +12,8 @@ import { ThemeProvider } from "./components/shared/ThemeProvider";
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 1000 * 60 * 5, // 5 menit
+      staleTime: 1000 * 60 * 5,
       retry: (failureCount, error: any) => {
-        // Jangan retry untuk 401, 403, 404
         if ([401, 403, 404].includes(error?.response?.status)) return false;
         return failureCount < 2;
       },
@@ -28,18 +27,7 @@ createRoot(document.getElementById("root")!).render(
       <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
         <TooltipProvider delayDuration={300}>
           <AppRouter />
-          <Toaster
-            position="top-right"
-            richColors
-            theme="dark"
-            toastOptions={{
-              style: {
-                background: "#0f172a",
-                border: "1px solid #1e293b",
-                color: "#f1f5f9",
-              },
-            }}
-          />
+          <Toaster position="top-right" richColors theme="system" />
         </TooltipProvider>
       </ThemeProvider>
     </QueryClientProvider>

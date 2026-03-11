@@ -9,6 +9,7 @@ use App\Services\MidtransService;
 use App\Services\PaymentService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class PaymentController extends Controller
 {
@@ -48,25 +49,62 @@ class PaymentController extends Controller
      */
     public function midtransWebhook(Request $request): JsonResponse
     {
-        // Verifikasi signature Midtrans
-        $notifData = $this->midtransService->handleNotification();
+        try {
+            Log::info('Midtrans webhook received', [
+                'request_body' => $request->all(),
+                'headers'      => $request->headers->all(),
+            ]);
 
-        // Validasi server key hash
-        $serverKey    = config('services.midtrans.server_key');
-        $signatureKey = hash('sha512',
-            $notifData['order_id'] .
-            $notifData['transaction_status'] .
-            $notifData['gross_amount'] .
-            $serverKey
-        );
+            // Verifikasi signature Midtrans
+            $notifData = $this->midtransService->handleNotification($request->all());
+            $signatureKeyFromRequest = $request->input('signature_key');
 
-        if ($request->signature_key !== $signatureKey) {
-            return response()->json(['message' => 'Invalid signature.'], 403);
+            // Validasi server key hash
+            // Format: order_id + status_code + gross_amount + server_key
+            $serverKey    = config('services.midtrans.server_key');
+            $statusCode   = $request->input('status_code');
+            $signatureKey = hash('sha512',
+                $notifData['order_id'] .
+                $statusCode .
+                (string)$notifData['gross_amount'] .
+                $serverKey
+            );
+
+            Log::info('Midtrans signature verification', [
+                'provided_signature' => $signatureKeyFromRequest,
+                'computed_signature' => $signatureKey,
+                'match'              => $signatureKeyFromRequest === $signatureKey,
+            ]);
+
+            if ($signatureKeyFromRequest !== $signatureKey) {
+                Log::warning('Midtrans webhook signature mismatch', [
+                    'order_id' => $notifData['order_id'] ?? null,
+                    'provided_signature' => $signatureKeyFromRequest,
+                    'computed_signature' => $signatureKey,
+                ]);
+                return response()->json(['message' => 'Invalid signature.'], 403);
+            }
+
+            $this->paymentService->handleMidtransWebhook($notifData);
+
+            Log::info('Midtrans webhook processed successfully', [
+                'order_id' => $notifData['order_id'],
+                'status'   => $notifData['transaction_status'],
+            ]);
+
+            return response()->json(['message' => 'OK']);
+        } catch (\Exception $e) {
+            Log::error('Midtrans webhook error', [
+                'message'    => $e->getMessage(),
+                'trace'      => $e->getTraceAsString(),
+                'request'    => $request->all(),
+            ]);
+
+            return response()->json([
+                'message' => 'Webhook processing error',
+                'error'   => $e->getMessage(),
+            ], 400);
         }
-
-        $this->paymentService->handleMidtransWebhook($notifData);
-
-        return response()->json(['message' => 'OK']);
     }
 
     /**

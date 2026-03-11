@@ -5,7 +5,6 @@ import {
   QrCode,
   Calculator,
   type LucideIcon,
-  CreditCard,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -207,7 +206,7 @@ export function DownpaymentForm({
                 <span>Tunai</span>
               </div>
             </SelectItem>
-            <SelectItem
+            {/* <SelectItem
               value="midtrans"
               className="text-foreground focus:bg-muted focus:text-foreground"
             >
@@ -215,7 +214,7 @@ export function DownpaymentForm({
                 <CreditCard className="w-4 h-4 text-earth-500" />
                 <span>Midtrans</span>
               </div>
-            </SelectItem>
+            </SelectItem> */}
           </SelectContent>
         </Select>
       </div>

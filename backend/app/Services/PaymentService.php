@@ -6,9 +6,11 @@ use App\Enums\OrderStatus;
 use App\Enums\PaymentMethod;
 use App\Models\Order;
 use App\Models\Payment;
+use App\Models\User;
 use App\Notifications\OrderStatusNotification;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 
 class PaymentService
@@ -114,34 +116,72 @@ class PaymentService
 
     public function handleMidtransWebhook(array $notifData): void
     {
-        $payment = Payment::where('midtrans_order_id', $notifData['order_id'])->firstOrFail();
-        $order   = $payment->order;
-
-        $internalStatus = $this->midtransService->mapStatus(
-            $notifData['transaction_status'],
-            $notifData['fraud_status'] ?? null
-        );
-
-        DB::transaction(function () use ($payment, $order, $notifData, $internalStatus) {
-            $payment->update([
-                'status'                  => $internalStatus,
-                'midtrans_transaction_id' => $notifData['transaction_id'],
-                'midtrans_response'       => $notifData,
-                'amount_paid'             => $internalStatus === 'paid' ? $payment->amount : $payment->amount_paid,
-                'amount_remaining'        => $internalStatus === 'paid' ? 0 : $payment->amount_remaining,
-                'paid_at'                 => $internalStatus === 'paid' ? now() : null,
+        try {
+            Log::info('Processing Midtrans webhook', [
+                'order_id' => $notifData['order_id'],
+                'transaction_status' => $notifData['transaction_status'],
+                'amount' => $notifData['gross_amount'],
             ]);
 
-            if ($internalStatus === 'paid') {
-                $this->advanceOrderStatus($order);
+            $payment = Payment::where('midtrans_order_id', $notifData['order_id'])
+                ->firstOrFail();
+            $order   = $payment->order;
 
-                if ($order->customer?->user) {
-                    $order->customer->user->notify(
-                        new OrderStatusNotification($order, $order->status->value)
-                    );
+            $internalStatus = $this->midtransService->mapStatus(
+                $notifData['transaction_status'],
+                $notifData['fraud_status'] ?? null
+            );
+
+            Log::info('Mapped status', [
+                'transaction_status' => $notifData['transaction_status'],
+                'internal_status' => $internalStatus,
+            ]);
+
+            DB::transaction(function () use ($payment, $order, $notifData, $internalStatus) {
+                $payment->update([
+                    'status'                  => $internalStatus,
+                    'midtrans_transaction_id' => $notifData['transaction_id'],
+                    'midtrans_response'       => $notifData,
+                    'amount_paid'             => $internalStatus === 'paid' ? $payment->amount : $payment->amount_paid,
+                    'amount_remaining'        => $internalStatus === 'paid' ? 0 : $payment->amount_remaining,
+                    'paid_at'                 => $internalStatus === 'paid' ? now() : null,
+                ]);
+
+                Log::info('Payment updated', [
+                    'payment_id' => $payment->id,
+                    'status' => $internalStatus,
+                    'amount' => $payment->amount,
+                ]);
+
+                if ($internalStatus === 'paid') {
+                    $this->advanceOrderStatus($order);
+
+                    Log::info('Order status advanced', [
+                        'order_id' => $order->id,
+                        'new_status' => $order->status->value,
+                    ]);
+
+                    if ($order->customer?->user) {
+                        $order->customer->user->notify(
+                            new OrderStatusNotification($order, $order->status->value)
+                        );
+                    }
                 }
-            }
-        });
+            });
+
+            Log::info('Midtrans webhook handled successfully', [
+                'order_id' => $notifData['order_id'],
+                'final_status' => $internalStatus,
+            ]);
+
+        } catch (\Throwable $e) {
+            Log::error('Error handling Midtrans webhook', [
+                'order_id' => $notifData['order_id'] ?? null,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            throw $e;
+        }
     }
 
     // ── Pelunasan sisa pembayaran ─────────────────────────────────────────────
@@ -223,11 +263,30 @@ class PaymentService
     private function advanceOrderStatus(Order $order): void
     {
         if ($order->status === OrderStatus::Pending) {
+            // Get user: authenticated user > cashier > system user (find or create)
+            $user = Auth::user() ?? $order->cashier ?? $this->getSystemUser();
+
             $order->transitionStatus(
                 OrderStatus::Processing,
-                Auth::user() ?? $order->cashier,
+                $user,
                 'Pembayaran dikonfirmasi'
             );
         }
+    }
+
+    private function getSystemUser(): User
+    {
+        // Find or create system user for automated transactions (webhooks, etc)
+        return User::firstOrCreate(
+            ['email' => 'system@pos.local'],
+            [
+                'name'       => 'Sistem',
+                'email'      => 'system@pos.local',
+                'password'   => bcrypt('system-' . md5(time())),
+                'phone'      => '0000000000',
+                'role'       => 'kasir',
+                'status'     => 'active',
+            ]
+        );
     }
 }
