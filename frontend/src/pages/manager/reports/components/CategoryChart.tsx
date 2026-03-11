@@ -176,16 +176,6 @@ export function CategoryChart({ data, isLoading }: Props) {
                   </div>
                 );
               })}
-
-              {/* Total summary */}
-              <div className="pt-2 mt-2 border-t border-border">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-muted-foreground">Total Penjualan</span>
-                  <span className="font-bold text-foreground">
-                    {formatCurrency(total)}
-                  </span>
-                </div>
-              </div>
             </div>
           </div>
         )}

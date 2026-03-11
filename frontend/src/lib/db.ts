@@ -17,7 +17,10 @@ export interface CachedMenu {
   price: number;
   category: string;
   is_available: boolean;
-  image_url: string | null;
+  stock: number | null;
+  preparation_time: number;
+  first_image_url: string | null;
+  images: Array<{ url: string; thumb?: string; medium?: string }> | [];
   cachedAt: string;
 }
 

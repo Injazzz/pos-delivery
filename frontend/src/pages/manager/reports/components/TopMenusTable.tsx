@@ -36,8 +36,8 @@ const RANK_COLORS = [
 
 export function TopMenusTable({ data, isLoading }: Props) {
   const maxQty = data?.[0]?.total_qty ?? 1;
-  const totalRevenue =
-    data?.reduce((sum, menu) => sum + menu.total_revenue, 0) || 0;
+  // const totalRevenue =
+  //   data?.reduce((sum, menu) => sum + menu.total_revenue, 0) || 0;
 
   // Format currency
   const formatCurrency = (value: number) => {
@@ -190,21 +190,6 @@ export function TopMenusTable({ data, isLoading }: Props) {
                 </div>
               );
             })}
-
-            {/* Total summary */}
-            <div className="pt-3 mt-2 border-t border-border">
-              <div className="flex items-center justify-between text-xs">
-                <span className="text-muted-foreground">Total Penjualan</span>
-                <div className="text-right">
-                  <p className="font-bold text-foreground">
-                    {data.reduce((sum, m) => sum + m.total_qty, 0)} item
-                  </p>
-                  <p className="text-[10px] text-muted-foreground">
-                    {formatCurrency(totalRevenue)}
-                  </p>
-                </div>
-              </div>
-            </div>
           </div>
         )}
       </CardContent>

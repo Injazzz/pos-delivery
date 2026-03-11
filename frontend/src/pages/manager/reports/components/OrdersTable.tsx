@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ui/badge";
 import { OrderStatusBadge } from "@/components/shared/OrderStatusBadge";
 import {
   Table,
@@ -92,6 +93,9 @@ export function OrdersTable({ filters }: Props) {
               <TableHead className="text-muted-foreground font-medium">
                 Pembayaran
               </TableHead>
+              <TableHead className="text-muted-foreground font-medium">
+                Pelunasan
+              </TableHead>
               <TableHead className="text-muted-foreground font-medium text-right">
                 Waktu
               </TableHead>
@@ -118,7 +122,16 @@ export function OrdersTable({ filters }: Props) {
                     <Skeleton className="h-4 w-20 bg-muted" />
                   </TableCell>
                   <TableCell>
-                    <Skeleton className="h-4 w-16 bg-muted" />
+                    <div className="space-y-1">
+                      <Skeleton className="h-5 w-16 bg-muted rounded-full" />
+                      <Skeleton className="h-3 w-12 bg-muted" />
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="space-y-1">
+                      <Skeleton className="h-4 w-20 bg-muted" />
+                      <Skeleton className="h-3 w-16 bg-muted" />
+                    </div>
                   </TableCell>
                   <TableCell>
                     <Skeleton className="h-4 w-24 bg-muted ml-auto" />
@@ -183,13 +196,62 @@ export function OrdersTable({ filters }: Props) {
                       </span>
                     </TableCell>
 
-                    {/* Payment Method */}
+                    {/* Payment Method & Status */}
                     <TableCell>
-                      <div className="flex items-center gap-1">
-                        <CreditCard className="w-3.5 h-3.5 text-muted-foreground" />
-                        <span className="text-xs text-foreground capitalize">
-                          {order.payment_method || "-"}
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-1">
+                          <CreditCard className="w-3.5 h-3.5 text-muted-foreground" />
+                          <span className="text-xs text-foreground capitalize font-medium">
+                            {order.payment_method === "cash" && "Tunai"}
+                            {order.payment_method === "transfer" && "Transfer"}
+                            {order.payment_method === "qris" && "QRIS"}
+                            {order.payment_method === "midtrans" && "Midtrans"}
+                            {!["cash", "transfer", "qris", "midtrans"].includes(
+                              order.payment_method,
+                            ) &&
+                              (order.payment_method === "-"
+                                ? "-"
+                                : order.payment_method)}
+                          </span>
+                        </div>
+                        {order.payment_status &&
+                          order.payment_status !== "-" && (
+                            <Badge
+                              variant="outline"
+                              className={cn(
+                                "text-[10px] font-medium w-fit",
+                                order.payment_status === "paid"
+                                  ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/30"
+                                  : order.payment_status === "partial"
+                                    ? "bg-glow-500/10 text-glow-500 border-glow-500/30"
+                                    : "bg-destructive/10 text-destructive border-destructive/30",
+                              )}
+                            >
+                              {order.payment_status === "paid"
+                                ? "Lunas"
+                                : order.payment_status === "partial"
+                                  ? "DP"
+                                  : "Belum"}
+                            </Badge>
+                          )}
+                      </div>
+                    </TableCell>
+
+                    {/* Pelunasan */}
+                    <TableCell>
+                      <div className="space-y-1">
+                        <span className="text-sm font-medium text-foreground">
+                          Rp {(order.amount_paid ?? 0).toLocaleString("id-ID")}
                         </span>
+                        {order.payment_status === "partial" &&
+                          order.amount_remaining > 0 && (
+                            <p className="text-[10px] text-glow-500">
+                              Sisa: Rp{" "}
+                              {(order.amount_remaining ?? 0).toLocaleString(
+                                "id-ID",
+                              )}
+                            </p>
+                          )}
                       </div>
                     </TableCell>
 
@@ -214,7 +276,7 @@ export function OrdersTable({ filters }: Props) {
             {/* Empty State */}
             {!isLoading && orders.length === 0 && (
               <TableRow className="border-border hover:bg-muted/50">
-                <TableCell colSpan={6} className="text-center py-16">
+                <TableCell colSpan={7} className="text-center py-16">
                   <div className="flex flex-col items-center justify-center">
                     <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-3">
                       <Receipt className="w-8 h-8 text-muted-foreground" />

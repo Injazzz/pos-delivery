@@ -37,16 +37,54 @@ function CustomTooltip({ active, payload, label }: any) {
     getComputedStyle(document.documentElement)
       .getPropertyValue("--heart-500")
       .trim() || "#f83f2d";
+  const neutralColor =
+    getComputedStyle(document.documentElement)
+      .getPropertyValue("--neutral-500")
+      .trim() || "#6b7280";
+
+  const getColor = (dataKey: string) => {
+    switch (dataKey) {
+      case "revenue":
+        return earthColor;
+      case "pending_revenue":
+        return neutralColor;
+      case "orders":
+        return heartColor;
+      default:
+        return earthColor;
+    }
+  };
+
+  const getLabel = (dataKey: string) => {
+    switch (dataKey) {
+      case "revenue":
+        return "Pendapatan Lunas";
+      case "pending_revenue":
+        return "Pendapatan Belum Lunas";
+      case "orders":
+        return "Order";
+      default:
+        return dataKey;
+    }
+  };
 
   return (
     <div className="bg-card border border-border rounded-lg p-3 shadow-xl text-xs">
       <p className="text-muted-foreground mb-2 font-medium">{label}</p>
-      <p className="font-semibold" style={{ color: earthColor }}>
-        Rp {payload[0]?.value?.toLocaleString("id-ID")}
-      </p>
-      <p className="mt-1" style={{ color: heartColor }}>
-        {payload[1]?.value} order
-      </p>
+      {payload.map((entry: any, index: number) => {
+        const color = getColor(entry.dataKey);
+        const label = getLabel(entry.dataKey);
+        const value =
+          entry.dataKey === "orders"
+            ? `${entry.value} order`
+            : `Rp ${entry.value?.toLocaleString("id-ID")}`;
+
+        return (
+          <p key={index} className="mt-1" style={{ color }}>
+            {label}: {value}
+          </p>
+        );
+      })}
     </div>
   );
 }
@@ -55,8 +93,10 @@ export function RevenueChart({ data, isLoading }: Props) {
   const [mounted, setMounted] = useState(false);
   const [colors, setColors] = useState({
     revenue: "#b8893a",
+    pending: "#6b7280",
     orders: "#f83f2d",
     revenueGradientStart: "#d7a74f",
+    pendingGradientStart: "#9ca3af",
     ordersGradientStart: "#ff6b5c",
     axisText: "#6b7280", // gray-500
     gridColor: "#e5e7eb", // gray-200
@@ -75,6 +115,10 @@ export function RevenueChart({ data, isLoading }: Props) {
         revenue:
           computed.getPropertyValue("--earth-600").trim() ||
           (isDark ? "#b8893a" : "#9a6b2c"),
+        // Pending menggunakan neutral
+        pending:
+          computed.getPropertyValue("--neutral-500").trim() ||
+          (isDark ? "#6b7280" : "#6b7280"),
         // Orders menggunakan heart
         orders:
           computed.getPropertyValue("--heart-500").trim() ||
@@ -83,6 +127,10 @@ export function RevenueChart({ data, isLoading }: Props) {
         revenueGradientStart:
           computed.getPropertyValue("--earth-400").trim() ||
           (isDark ? "#d7a74f" : "#b8893a"),
+        // Pending gradient menggunakan neutral yang lebih terang
+        pendingGradientStart:
+          computed.getPropertyValue("--neutral-400").trim() ||
+          (isDark ? "#9ca3af" : "#9ca3af"),
         // Orders gradient menggunakan heart yang lebih terang
         ordersGradientStart:
           computed.getPropertyValue("--heart-400").trim() ||
@@ -155,6 +203,20 @@ export function RevenueChart({ data, isLoading }: Props) {
                   <stop
                     offset="95%"
                     stopColor={colors.revenueGradientStart}
+                    stopOpacity={0}
+                  />
+                </linearGradient>
+
+                {/* Pending Revenue Gradient - Menggunakan Neutral */}
+                <linearGradient id="pendingGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop
+                    offset="5%"
+                    stopColor={colors.pendingGradientStart}
+                    stopOpacity={0.2}
+                  />
+                  <stop
+                    offset="95%"
+                    stopColor={colors.pendingGradientStart}
                     stopOpacity={0}
                   />
                 </linearGradient>
@@ -233,13 +295,33 @@ export function RevenueChart({ data, isLoading }: Props) {
                 stroke={colors.revenue}
                 strokeWidth={2.5}
                 fill="url(#revenueGrad)"
-                name="Revenue"
+                name="Revenue Lunas"
                 isAnimationActive={true}
                 animationDuration={500}
                 dot={false}
                 activeDot={{
                   r: 6,
                   stroke: colors.revenue,
+                  strokeWidth: 2,
+                  fill: "white",
+                }}
+              />
+
+              {/* Pending Revenue Area - Menggunakan Neutral */}
+              <Area
+                yAxisId="revenue"
+                type="monotone"
+                dataKey="pending_revenue"
+                stroke={colors.pending}
+                strokeWidth={2.5}
+                fill="url(#pendingGrad)"
+                name="Revenue Belum Lunas"
+                isAnimationActive={true}
+                animationDuration={500}
+                dot={false}
+                activeDot={{
+                  r: 6,
+                  stroke: colors.pending,
                   strokeWidth: 2,
                   fill: "white",
                 }}

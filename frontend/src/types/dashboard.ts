@@ -14,6 +14,7 @@ export interface RevenueChartPoint {
   date: string;
   label: string;
   revenue: number;
+  pending_revenue: number;
   orders: number;
 }
 

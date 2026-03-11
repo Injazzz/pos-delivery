@@ -14,9 +14,10 @@ import { cn } from "@/lib/utils";
 import type { ReportSummary } from "@/types/report";
 
 function fmt(n: number) {
-  if (n >= 1_000_000) return `Rp ${(n / 1_000_000).toFixed(1)}jt`;
-  if (n >= 1_000) return `Rp ${(n / 1_000).toFixed(0)}rb`;
-  return `Rp ${n.toLocaleString("id-ID")}`;
+  return `Rp ${n.toLocaleString("id-ID", {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  })}`;
 }
 
 interface Props {

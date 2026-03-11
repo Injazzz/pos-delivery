@@ -16,35 +16,67 @@ const QUICK_AMOUNTS = [50000, 100000, 150000, 200000, 500000];
 export function CashPaymentForm({ total, isLoading, onSubmit }: Props) {
   const [cashReceived, setCashReceived] = useState<string>("");
 
-  const cash = parseFloat(cashReceived) || 0;
+  // Fungsi untuk memformat angka ke format Indonesia (dengan titik)
+  const formatNumber = (value: string): string => {
+    // Hapus semua karakter non-digit
+    const numbers = value.replace(/\D/g, "");
+
+    // Jika kosong, return string kosong
+    if (!numbers) return "";
+
+    // Format dengan titik sebagai pemisah ribuan
+    return new Intl.NumberFormat("id-ID").format(parseInt(numbers));
+  };
+
+  // Fungsi untuk mengubah string berformat ke number
+  const parseFormattedNumber = (formatted: string): number => {
+    // Hapus semua karakter non-digit dan convert ke number
+    return parseInt(formatted.replace(/\D/g, "")) || 0;
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatNumber(e.target.value);
+    setCashReceived(formatted);
+  };
+
+  const cash = parseFormattedNumber(cashReceived);
   const change = cash - total;
   const isValid = cash >= total;
 
   const handleQuick = (amount: number) => {
     const rounded = Math.ceil(total / amount) * amount;
-    setCashReceived(String(rounded));
+    setCashReceived(formatNumber(String(rounded)));
+  };
+
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat("id-ID", {
+      style: "currency",
+      currency: "IDR",
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(value);
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 bg-card p-6 rounded-xl shadow-md border border-border">
       <div className="space-y-1.5">
-        <Label className="text-slate-300 text-sm">Uang Diterima</Label>
+        <Label className="text-foreground text-sm">Uang Diterima</Label>
         <div className="relative">
-          <Banknote className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+          <Banknote className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
-            type="number"
+            type="text"
             value={cashReceived}
-            onChange={(e) => setCashReceived(e.target.value)}
+            onChange={handleInputChange}
             placeholder="0"
             disabled={isLoading}
-            className="pl-9 bg-slate-800 border-slate-700 text-white text-lg font-bold h-12 focus:border-amber-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="pl-9 bg-background border-border text-foreground text-lg font-bold h-12 focus:border-heart-500 disabled:opacity-50 disabled:cursor-not-allowed text-right"
           />
         </div>
       </div>
 
       {/* Quick amount buttons */}
       <div>
-        <p className="text-xs text-slate-500 mb-2">Nominal cepat:</p>
+        <p className="text-xs text-muted-foreground mb-2">Nominal cepat:</p>
         <div className="flex flex-wrap gap-2">
           {QUICK_AMOUNTS.map((amount) => {
             const rounded = Math.ceil(total / amount) * amount;
@@ -54,9 +86,9 @@ export function CashPaymentForm({ total, isLoading, onSubmit }: Props) {
                 type="button"
                 onClick={() => handleQuick(amount)}
                 disabled={isLoading}
-                className="px-3 py-1.5 rounded-lg bg-slate-800 border border-slate-700 hover:border-amber-500/50 text-xs text-slate-300 hover:text-amber-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-3 py-1.5 rounded-lg bg-background border border-border hover:border-heart-500/50 text-xs text-muted-foreground hover:text-heart-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Rp {rounded.toLocaleString("id-ID")}
+                Rp {formatCurrency(rounded).replace("Rp", "").trim()}
               </button>
             );
           })}
@@ -70,27 +102,27 @@ export function CashPaymentForm({ total, isLoading, onSubmit }: Props) {
             "flex items-center justify-between p-3 rounded-xl border",
             isValid
               ? "bg-emerald-500/10 border-emerald-500/30"
-              : "bg-red-500/10 border-red-500/30",
+              : "bg-destructive/10 border-destructive/30",
           )}
         >
           <div className="flex items-center gap-2">
             <Calculator
               className={cn(
                 "w-4 h-4",
-                isValid ? "text-emerald-400" : "text-red-400",
+                isValid ? "text-emerald-500" : "text-destructive",
               )}
             />
-            <span className="text-sm font-medium text-white">
+            <span className="text-sm font-medium text-foreground">
               {isValid ? "Kembalian" : "Kurang"}
             </span>
           </div>
           <span
             className={cn(
               "text-lg font-bold",
-              isValid ? "text-emerald-400" : "text-red-400",
+              isValid ? "text-emerald-500" : "text-destructive",
             )}
           >
-            Rp {Math.abs(change).toLocaleString("id-ID")}
+            {formatCurrency(Math.abs(change))}
           </span>
         </div>
       )}

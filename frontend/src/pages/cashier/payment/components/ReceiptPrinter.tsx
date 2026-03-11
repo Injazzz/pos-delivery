@@ -1,9 +1,17 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { useRef, useState } from "react";
-import { Printer, Loader2, Usb, Monitor } from "lucide-react";
+import {
+  Printer,
+  Loader2,
+  Usb,
+  Monitor,
+  CheckCircle2,
+  AlertCircle,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
 import { CustomerReceipt } from "@/components/print/CustomerReceipt";
 import { KitchenReceipt } from "@/components/print/KitchenReceipt";
 import { usePrint } from "@/hooks/usePrint";
@@ -56,111 +64,208 @@ export function ReceiptPrinter({ data, onDone }: Props) {
   const isPrinting = serial.status === "printing";
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5 bg-card p-6 rounded-xl border border-border">
+      {/* Header */}
+      <div className="flex items-center gap-3">
+        <div className="w-10 h-10 rounded-full bg-heart-500/20 flex items-center justify-center">
+          <Printer className="w-5 h-5 text-heart-500" />
+        </div>
+        <div>
+          <h3 className="text-foreground font-semibold">Cetak Struk</h3>
+          <p className="text-xs text-muted-foreground">
+            Pilih printer dan jenis struk yang akan dicetak
+          </p>
+        </div>
+      </div>
+
       {/* Mode selector */}
       {serial.isSupported && (
-        <div className="flex gap-2 p-1 bg-slate-800 rounded-xl">
-          {[
-            { mode: "window", label: "Browser Print", icon: Monitor },
-            { mode: "serial", label: "USB Printer", icon: Usb },
-          ].map(({ mode, label, icon: Icon }) => (
-            <button
-              key={mode}
-              type="button"
-              onClick={() => {
-                setPrintMode(mode as "window" | "serial");
-                if (mode === "serial" && !serial.isConnected) {
-                  serial.connect();
-                }
-              }}
-              className={cn(
-                "flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-xs transition-all",
-                printMode === mode
-                  ? "bg-slate-700 text-white font-semibold shadow"
-                  : "text-slate-500 hover:text-slate-300",
-              )}
-            >
-              <Icon className="w-3.5 h-3.5" />
-              {label}
-              {mode === "serial" && serial.isConnected && (
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-              )}
-            </button>
-          ))}
+        <div className="space-y-2">
+          <p className="text-xs text-muted-foreground flex items-center gap-1">
+            <span>Metode Cetak</span>
+          </p>
+          <div className="grid grid-cols-2 gap-2">
+            {[
+              {
+                mode: "window",
+                label: "Browser Print",
+                icon: Monitor,
+                desc: "Cetak melalui dialog browser",
+                color: "text-heart-500",
+              },
+              {
+                mode: "serial",
+                label: "USB Printer",
+                icon: Usb,
+                desc: "Cetak langsung ke printer USB",
+                color: "text-emerald-500",
+              },
+            ].map(({ mode, label, icon: Icon, desc, color }) => {
+              const isActive = printMode === mode;
+              const isConnected = mode === "serial" && serial.isConnected;
+
+              return (
+                <button
+                  key={mode}
+                  type="button"
+                  onClick={() => {
+                    setPrintMode(mode as "window" | "serial");
+                    if (mode === "serial" && !serial.isConnected) {
+                      serial.connect();
+                    }
+                  }}
+                  className={cn(
+                    "flex items-start gap-3 p-3 rounded-xl border-2 text-left transition-all",
+                    isActive
+                      ? "border-heart-500/50 bg-heart-500/5"
+                      : "border-border bg-card hover:border-heart-500/30 hover:bg-muted/50",
+                  )}
+                >
+                  <div
+                    className={cn(
+                      "w-8 h-8 rounded-lg flex items-center justify-center shrink-0",
+                      isActive ? "bg-heart-500/10" : "bg-muted",
+                    )}
+                  >
+                    <Icon
+                      className={cn(
+                        "w-4 h-4",
+                        isActive ? color : "text-muted-foreground",
+                      )}
+                    />
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <p
+                        className={cn(
+                          "text-sm font-medium",
+                          isActive ? color : "text-foreground",
+                        )}
+                      >
+                        {label}
+                      </p>
+                      {isConnected && (
+                        <Badge className="bg-emerald-500/10 text-emerald-500 border-emerald-500/30 text-[8px]">
+                          <CheckCircle2 className="w-2 h-2 mr-0.5" />
+                          Terhubung
+                        </Badge>
+                      )}
+                      {mode === "serial" && !serial.isConnected && isActive && (
+                        <Badge className="bg-destructive/10 text-destructive border-destructive/30 text-[8px]">
+                          <AlertCircle className="w-2 h-2 mr-0.5" />
+                          Tidak terhubung
+                        </Badge>
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {desc}
+                    </p>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
         </div>
       )}
 
       {/* Print buttons */}
-      <div className="grid grid-cols-3 gap-2">
-        {[
-          {
-            label: "Struk Pelanggan",
-            type: "customer" as const,
-            color: "bg-blue-600 hover:bg-blue-500",
-          },
-          {
-            label: "Struk Dapur",
-            type: "kitchen" as const,
-            color: "bg-orange-600 hover:bg-orange-500",
-          },
-          {
-            label: "Cetak Semua",
-            type: "both" as const,
-            color: "bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold",
-          },
-        ].map((btn) => (
-          <Button
-            key={btn.type}
-            disabled={isPrinting}
-            className={cn("h-10 text-xs gap-1.5 text-white", btn.color)}
-            onClick={() => handlePrint(btn.type)}
-          >
-            {isPrinting ? (
-              <Loader2 className="w-3.5 h-3.5 animate-spin" />
-            ) : (
-              <Printer className="w-3.5 h-3.5" />
-            )}
-            <span className="hidden sm:inline">{btn.label}</span>
-          </Button>
-        ))}
+      <div className="space-y-2">
+        <p className="text-xs text-muted-foreground flex items-center gap-1">
+          <span>Pilih Jenis Struk</span>
+        </p>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+          {[
+            {
+              label: "Struk Pelanggan",
+              type: "customer" as const,
+              icon: Printer,
+              color: "text-heart-500",
+              bg: "bg-heart-500",
+              desc: "Untuk pelanggan",
+            },
+            {
+              label: "Struk Dapur",
+              type: "kitchen" as const,
+              icon: Printer,
+              color: "text-glow-500",
+              bg: "bg-glow-500",
+              desc: "Untuk dapur/koki",
+            },
+            {
+              label: "Cetak Semua",
+              type: "both" as const,
+              icon: Printer,
+              color: "text-emerald-500",
+              bg: "bg-emerald-500",
+              desc: "Cetak kedua struk",
+            },
+          ].map((btn) => (
+            <Button
+              key={btn.type}
+              disabled={isPrinting}
+              className={cn(
+                "h-auto py-3 px-4 flex-col items-start gap-1 text-white",
+                "hover:scale-105 transition-all",
+                btn.bg,
+              )}
+              onClick={() => handlePrint(btn.type)}
+            >
+              <div className="flex items-center gap-2 w-full">
+                {isPrinting ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Printer className="w-4 h-4" />
+                )}
+                <span className="text-sm font-semibold">{btn.label}</span>
+              </div>
+              <span className="text-[10px] text-white/80">{btn.desc}</span>
+            </Button>
+          ))}
+        </div>
       </div>
 
       {/* Preview */}
-      <Tabs defaultValue="customer">
-        <TabsList className="bg-slate-800 border border-slate-700 w-full">
-          <TabsTrigger
-            value="customer"
-            className="flex-1 text-xs data-[state=active]:bg-slate-700 data-[state=active]:text-white text-slate-400"
-          >
-            Struk Pelanggan
-          </TabsTrigger>
-          <TabsTrigger
-            value="kitchen"
-            className="flex-1 text-xs data-[state=active]:bg-slate-700 data-[state=active]:text-white text-slate-400"
-          >
-            Struk Dapur
-          </TabsTrigger>
-        </TabsList>
+      <div className="space-y-2">
+        <p className="text-xs text-muted-foreground flex items-center gap-1">
+          <span>Preview Struk</span>
+        </p>
+        <Tabs defaultValue="customer" className="w-full">
+          <TabsList className="bg-muted/50 border border-border w-full p-1">
+            <TabsTrigger
+              value="customer"
+              className="flex-1 text-xs data-[state=active]:bg-heart-500 data-[state=active]:text-white text-muted-foreground"
+            >
+              Struk Pelanggan
+            </TabsTrigger>
+            <TabsTrigger
+              value="kitchen"
+              className="flex-1 text-xs data-[state=active]:bg-glow-500 data-[state=active]:text-white text-muted-foreground"
+            >
+              Struk Dapur
+            </TabsTrigger>
+          </TabsList>
 
-        <TabsContent value="customer" className="mt-3">
-          <div className="bg-white rounded-xl p-2 flex justify-center overflow-hidden">
-            <CustomerReceipt ref={customerPreviewRef} data={data} />
-          </div>
-        </TabsContent>
+          <TabsContent value="customer" className="mt-3">
+            <div className="bg-white rounded-xl p-3 flex justify-center overflow-hidden border border-border">
+              <CustomerReceipt ref={customerPreviewRef} data={data} />
+            </div>
+          </TabsContent>
 
-        <TabsContent value="kitchen" className="mt-3">
-          <div className="bg-white rounded-xl p-2 flex justify-center overflow-hidden">
-            <KitchenReceipt ref={kitchenPreviewRef} data={data} />
-          </div>
-        </TabsContent>
-      </Tabs>
+          <TabsContent value="kitchen" className="mt-3">
+            <div className="bg-white rounded-xl p-3 flex justify-center overflow-hidden border border-border">
+              <KitchenReceipt ref={kitchenPreviewRef} data={data} />
+            </div>
+          </TabsContent>
+        </Tabs>
+      </div>
 
       {/* Done button */}
       <Button
-        className="w-full h-12 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm"
+        className="w-full h-12 bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-sm gap-2"
         onClick={onDone}
       >
-        ✓ Selesai — Order Berikutnya
+        <CheckCircle2 className="w-4 h-4" />
+        Selesai — Order Berikutnya
       </Button>
     </div>
   );

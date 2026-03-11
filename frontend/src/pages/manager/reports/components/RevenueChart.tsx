@@ -15,9 +15,10 @@ import type { RevenueChartPoint } from "@/types/report";
 import { useEffect, useState } from "react";
 
 function fmtRevenue(v: number) {
-  if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(1)}jt`;
-  if (v >= 1_000) return `${(v / 1_000).toFixed(0)}rb`;
-  return String(v);
+  return `Rp ${(v / 1000).toLocaleString("id-ID", {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  })}k`;
 }
 
 interface Props {
@@ -37,12 +38,12 @@ function CustomTooltip({ active, payload, label }: any) {
   // Warna untuk setiap tipe
   const getColor = (dataKey: string) => {
     switch (dataKey) {
-      case "revenue":
-        return "var(--emerald-500)";
-      case "pending_revenue":
-        return "var(--glow-500)";
       case "orders":
         return "var(--heart-500)";
+      case "revenue":
+        return "var(--success-500)"; // success-500 untuk lunas
+      case "pending_revenue":
+        return "var(--warning-500)"; // warning-500 untuk belum lunas
       default:
         return "var(--foreground)";
     }
@@ -50,12 +51,12 @@ function CustomTooltip({ active, payload, label }: any) {
 
   const getLabel = (dataKey: string) => {
     switch (dataKey) {
-      case "revenue":
-        return "Pendapatan Lunas";
-      case "pending_revenue":
-        return "Pendapatan Tertunda";
       case "orders":
-        return "Order";
+        return "Orders";
+      case "revenue":
+        return "Pembayaran Lunas";
+      case "pending_revenue":
+        return "Pembayaran Belum Lunas";
       default:
         return dataKey;
     }
@@ -91,12 +92,12 @@ function CustomTooltip({ active, payload, label }: any) {
 export function RevenueChart({ data, isLoading }: Props) {
   const [mounted, setMounted] = useState(false);
   const [colors, setColors] = useState({
-    revenue: "#10b981", // emerald-500
-    pending: "#f59e0b", // glow-500
     orders: "#f43f5e", // heart-500
-    revenueGradientStart: "#10b981",
-    pendingGradientStart: "#f59e0b",
+    revenue: "#22c55e", // success-500 (hijau)
+    pending: "#f59e0b", // warning-500 (kuning/oranye)
     ordersGradientStart: "#f43f5e",
+    revenueGradientStart: "#22c55e",
+    pendingGradientStart: "#f59e0b",
     axisText: "#6b7280", // gray-500
     gridColor: "#e5e7eb", // gray-200
   });
@@ -110,28 +111,28 @@ export function RevenueChart({ data, isLoading }: Props) {
       const computed = getComputedStyle(document.documentElement);
 
       setColors({
-        // Pendapatan Lunas menggunakan emerald
-        revenue:
-          computed.getPropertyValue("--emerald-500").trim() ||
-          (isDark ? "#10b981" : "#059669"),
-        // Pendapatan Tertunda menggunakan glow
-        pending:
-          computed.getPropertyValue("--glow-500").trim() ||
-          (isDark ? "#f59e0b" : "#d97706"),
-        // Orders menggunakan heart
+        // Orders menggunakan heart-500
         orders:
           computed.getPropertyValue("--heart-500").trim() ||
           (isDark ? "#f43f5e" : "#e11d48"),
+        // Pendapatan Lunas menggunakan success-500 (hijau)
+        revenue:
+          computed.getPropertyValue("--success-500").trim() ||
+          (isDark ? "#22c55e" : "#16a34a"),
+        // Pendapatan Belum Lunas menggunakan warning-500 (kuning/oranye)
+        pending:
+          computed.getPropertyValue("--warning-500").trim() ||
+          (isDark ? "#f59e0b" : "#d97706"),
         // Gradient starts
-        revenueGradientStart:
-          computed.getPropertyValue("--emerald-400").trim() ||
-          (isDark ? "#34d399" : "#10b981"),
-        pendingGradientStart:
-          computed.getPropertyValue("--glow-400").trim() ||
-          (isDark ? "#fbbf24" : "#f59e0b"),
         ordersGradientStart:
           computed.getPropertyValue("--heart-400").trim() ||
           (isDark ? "#fb7185" : "#f43f5e"),
+        revenueGradientStart:
+          computed.getPropertyValue("--success-400").trim() ||
+          (isDark ? "#4ade80" : "#22c55e"),
+        pendingGradientStart:
+          computed.getPropertyValue("--warning-400").trim() ||
+          (isDark ? "#fbbf24" : "#f59e0b"),
         // Axis text color
         axisText: isDark ? "#9ca3af" : "#4b5563",
         // Grid color
@@ -190,7 +191,21 @@ export function RevenueChart({ data, isLoading }: Props) {
               margin={{ top: 10, right: 10, left: 0, bottom: 5 }}
             >
               <defs>
-                {/* Revenue Gradient - Pendapatan Lunas (Emerald) */}
+                {/* Orders Gradient - Heart */}
+                <linearGradient id="ordersGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop
+                    offset="5%"
+                    stopColor={colors.ordersGradientStart}
+                    stopOpacity={0.3}
+                  />
+                  <stop
+                    offset="95%"
+                    stopColor={colors.ordersGradientStart}
+                    stopOpacity={0}
+                  />
+                </linearGradient>
+
+                {/* Revenue Gradient - Lunas (Success/Hijau) */}
                 <linearGradient id="revenueGrad" x1="0" y1="0" x2="0" y2="1">
                   <stop
                     offset="5%"
@@ -204,30 +219,16 @@ export function RevenueChart({ data, isLoading }: Props) {
                   />
                 </linearGradient>
 
-                {/* Pending Revenue Gradient - Pendapatan Tertunda (Glow) */}
+                {/* Pending Revenue Gradient - Belum Lunas (Warning/Kuning) */}
                 <linearGradient id="pendingGrad" x1="0" y1="0" x2="0" y2="1">
                   <stop
                     offset="5%"
                     stopColor={colors.pendingGradientStart}
-                    stopOpacity={0.3}
-                  />
-                  <stop
-                    offset="95%"
-                    stopColor={colors.pendingGradientStart}
-                    stopOpacity={0}
-                  />
-                </linearGradient>
-
-                {/* Orders Gradient - Order (Heart) */}
-                <linearGradient id="ordersGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop
-                    offset="5%"
-                    stopColor={colors.ordersGradientStart}
                     stopOpacity={0.2}
                   />
                   <stop
                     offset="95%"
-                    stopColor={colors.ordersGradientStart}
+                    stopColor={colors.pendingGradientStart}
                     stopOpacity={0}
                   />
                 </linearGradient>
@@ -282,7 +283,27 @@ export function RevenueChart({ data, isLoading }: Props) {
 
               <Tooltip content={<CustomTooltip />} />
 
-              {/* Pendapatan Lunas Area - Emerald */}
+              {/* Orders Area - Heart (Merah) */}
+              <Area
+                yAxisId="orders"
+                type="monotone"
+                dataKey="orders"
+                stroke={colors.orders}
+                strokeWidth={2.5}
+                fill="url(#ordersGrad)"
+                name="Orders"
+                isAnimationActive={true}
+                animationDuration={500}
+                dot={false}
+                activeDot={{
+                  r: 6,
+                  stroke: colors.orders,
+                  strokeWidth: 2,
+                  fill: "white",
+                }}
+              />
+
+              {/* Pendapatan Lunas Area - Success (Hijau) */}
               <Area
                 yAxisId="revenue"
                 type="monotone"
@@ -290,7 +311,7 @@ export function RevenueChart({ data, isLoading }: Props) {
                 stroke={colors.revenue}
                 strokeWidth={2.5}
                 fill="url(#revenueGrad)"
-                name="Pendapatan Lunas"
+                name="Pembayaran Lunas"
                 isAnimationActive={true}
                 animationDuration={500}
                 dot={false}
@@ -302,7 +323,7 @@ export function RevenueChart({ data, isLoading }: Props) {
                 }}
               />
 
-              {/* Pendapatan Tertunda Area - Glow */}
+              {/* Pendapatan Belum Lunas Area - Warning (Kuning/Oranye) */}
               <Area
                 yAxisId="revenue"
                 type="monotone"
@@ -310,33 +331,13 @@ export function RevenueChart({ data, isLoading }: Props) {
                 stroke={colors.pending}
                 strokeWidth={2.5}
                 fill="url(#pendingGrad)"
-                name="Pendapatan Tertunda"
+                name="Pembayaran Belum Lunas"
                 isAnimationActive={true}
                 animationDuration={500}
                 dot={false}
                 activeDot={{
                   r: 6,
                   stroke: colors.pending,
-                  strokeWidth: 2,
-                  fill: "white",
-                }}
-              />
-
-              {/* Orders Area - Heart */}
-              <Area
-                yAxisId="orders"
-                type="monotone"
-                dataKey="orders"
-                stroke={colors.orders}
-                strokeWidth={2.5}
-                fill="url(#ordersGrad)"
-                name="Order"
-                isAnimationActive={true}
-                animationDuration={500}
-                dot={false}
-                activeDot={{
-                  r: 6,
-                  stroke: colors.orders,
                   strokeWidth: 2,
                   fill: "white",
                 }}

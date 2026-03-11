@@ -92,6 +92,9 @@ export function OrderTable({
                 Pembayaran
               </TableHead>
               <TableHead className="text-muted-foreground font-medium">
+                Pelunasan
+              </TableHead>
+              <TableHead className="text-muted-foreground font-medium">
                 Waktu
               </TableHead>
               <TableHead className="text-muted-foreground font-medium text-right">
@@ -123,7 +126,16 @@ export function OrderTable({
                     <Skeleton className="h-4 w-20 bg-muted" />
                   </TableCell>
                   <TableCell>
-                    <Skeleton className="h-5 w-16 bg-muted rounded-full" />
+                    <div className="space-y-1">
+                      <Skeleton className="h-5 w-16 bg-muted rounded-full" />
+                      <Skeleton className="h-3 w-12 bg-muted" />
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="space-y-1">
+                      <Skeleton className="h-4 w-20 bg-muted" />
+                      <Skeleton className="h-3 w-16 bg-muted" />
+                    </div>
                   </TableCell>
                   <TableCell>
                     <Skeleton className="h-4 w-24 bg-muted" />
@@ -191,35 +203,70 @@ export function OrderTable({
                     {/* Payment */}
                     <TableCell>
                       {order.payment ? (
-                        <Badge
-                          variant="outline"
-                          className={cn(
-                            "text-[10px] font-medium",
-                            order.payment.status === "paid"
-                              ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/30"
-                              : order.payment.status === "partial"
-                                ? "bg-glow-500/10 text-glow-500 border-glow-500/30"
-                                : "bg-destructive/10 text-destructive border-destructive/30",
-                          )}
-                        >
-                          <span className="flex items-center gap-1">
-                            <span
-                              className={cn(
-                                "w-1.5 h-1.5 rounded-full",
-                                order.payment.status === "paid"
-                                  ? "bg-emerald-500"
-                                  : order.payment.status === "partial"
-                                    ? "bg-glow-500"
-                                    : "bg-destructive",
-                              )}
-                            />
-                            {order.payment.status === "paid"
-                              ? "Lunas"
-                              : order.payment.status === "partial"
-                                ? "DP"
-                                : "Belum"}
+                        <div className="space-y-1">
+                          <Badge
+                            variant="outline"
+                            className={cn(
+                              "text-[10px] font-medium",
+                              order.payment.status === "paid"
+                                ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/30"
+                                : order.payment.status === "partial"
+                                  ? "bg-glow-500/10 text-glow-500 border-glow-500/30"
+                                  : "bg-destructive/10 text-destructive border-destructive/30",
+                            )}
+                          >
+                            <span className="flex items-center gap-1">
+                              <span
+                                className={cn(
+                                  "w-1.5 h-1.5 rounded-full",
+                                  order.payment.status === "paid"
+                                    ? "bg-emerald-500"
+                                    : order.payment.status === "partial"
+                                      ? "bg-glow-500"
+                                      : "bg-destructive",
+                                )}
+                              />
+                              {order.payment.status === "paid"
+                                ? "Lunas"
+                                : order.payment.status === "partial"
+                                  ? "DP"
+                                  : "Belum"}
+                            </span>
+                          </Badge>
+                          <p className="text-[10px] text-muted-foreground">
+                            {order.payment.method === "cash" && "Tunai"}
+                            {order.payment.method === "transfer" && "Transfer"}
+                            {order.payment.method === "qris" && "QRIS"}
+                            {order.payment.method === "midtrans" && "Midtrans"}
+                            {!["cash", "transfer", "qris", "midtrans"].includes(
+                              order.payment.method,
+                            ) && order.payment.method}
+                          </p>
+                        </div>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">—</span>
+                      )}
+                    </TableCell>
+
+                    {/* Pelunasan */}
+                    <TableCell>
+                      {order.payment ? (
+                        <div className="space-y-1">
+                          <span className="text-sm font-medium text-foreground">
+                            Rp{" "}
+                            {(order.payment.amount_paid ?? 0).toLocaleString(
+                              "id-ID",
+                            )}
                           </span>
-                        </Badge>
+                          {order.payment.status === "partial" && (
+                            <p className="text-[10px] text-glow-500">
+                              Sisa: Rp{" "}
+                              {(
+                                order.payment.amount_remaining ?? 0
+                              ).toLocaleString("id-ID")}
+                            </p>
+                          )}
+                        </div>
                       ) : (
                         <span className="text-xs text-muted-foreground">—</span>
                       )}
@@ -267,7 +314,7 @@ export function OrderTable({
             {/* Empty State */}
             {!isLoading && orders.length === 0 && (
               <TableRow className="border-border hover:bg-muted/50">
-                <TableCell colSpan={7} className="text-center py-16">
+                <TableCell colSpan={8} className="text-center py-16">
                   <div className="flex flex-col items-center justify-center">
                     <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-3">
                       <Store className="w-8 h-8 text-muted-foreground" />

@@ -37,11 +37,11 @@ export default function ActivityLogsPage() {
       {/* Header */}
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-white flex items-center gap-2">
+          <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
             <Activity className="w-6 h-6 text-amber-400" />
             Activity Log
           </h1>
-          <p className="text-slate-400 text-sm mt-1">
+          <p className="text-muted-foreground text-sm mt-1">
             Rekam jejak semua aktivitas sistem
           </p>
         </div>
@@ -54,8 +54,8 @@ export default function ActivityLogsPage() {
               { label: "Minggu ini", value: summaryData.this_week },
             ].map((s) => (
               <div key={s.label} className="text-right">
-                <p className="text-xl font-bold text-white">{s.value}</p>
-                <p className="text-[10px] text-slate-500">{s.label}</p>
+                <p className="text-xl font-bold text-foreground">{s.value}</p>
+                <p className="text-[10px] text-muted-foreground">{s.label}</p>
               </div>
             ))}
           </div>

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Manager;
 use App\Http\Controllers\Controller;
 use App\Models\Menu;
 use App\Models\Order;
+use App\Models\OrderItem;
 use App\Models\Payment;
 use App\Models\User;
 use App\Enums\OrderStatus;
@@ -37,16 +38,23 @@ class DashboardController extends Controller
             ? round((($revenueThisMonth - $revenueLastMonth) / $revenueLastMonth) * 100, 1)
             : 0;
 
-        // Orders
-        $ordersToday     = Order::whereDate('created_at', today())->count();
-        $ordersThisMonth = Order::whereBetween('created_at', [$thisMonth, now()])->count();
-        $ordersLastMonth = Order::whereBetween('created_at', [$lastMonth, now()->subMonth()->endOfMonth()])->count();
+        // Orders (exclude cancelled & pending - hanya hitung order yang sudah diproses)
+        $ordersToday     = Order::whereDate('created_at', today())
+            ->whereNotIn('status', [OrderStatus::Cancelled->value, OrderStatus::Pending->value])
+            ->count();
+        $ordersThisMonth = Order::whereBetween('created_at', [$thisMonth, now()])
+            ->whereNotIn('status', [OrderStatus::Cancelled->value, OrderStatus::Pending->value])
+            ->count();
+        $ordersLastMonth = Order::whereBetween('created_at', [$lastMonth, now()->subMonth()->endOfMonth()])
+            ->whereNotIn('status', [OrderStatus::Cancelled->value, OrderStatus::Pending->value])
+            ->count();
         $ordersGrowth    = $ordersLastMonth > 0
             ? round((($ordersThisMonth - $ordersLastMonth) / $ordersLastMonth) * 100, 1)
             : 0;
 
-        // By status (active)
+        // By status (active - exclude cancelled)
         $byStatus = collect(OrderStatus::cases())
+            ->filter(fn($s) => $s->value !== OrderStatus::Cancelled->value)
             ->mapWithKeys(fn($s) => [
                 $s->value => Order::where('status', $s->value)->count()
             ]);
@@ -84,17 +92,28 @@ class DashboardController extends Controller
         $data = collect(range($days - 1, 0))->map(function ($daysAgo) {
             $date = now()->subDays($daysAgo)->toDateString();
 
-            $revenue = Payment::where('status', 'paid')
-                ->whereDate('paid_at', $date)
-                ->sum('amount_paid');
-
-            $orders = Order::whereDate('created_at', $date)->count();
+            // Query ORDER berdasarkan PAYMENT (konsisten dengan report)
+            // Hanya hitung order yang punya payment dengan status 'paid' atau 'partial'
+            $orderData = Payment::where(function ($query) {
+                $query->where('payments.status', 'paid')
+                    ->orWhere('payments.status', 'partial');
+            })
+                ->join('orders', 'payments.order_id', '=', 'orders.id')
+                ->whereNotIn('orders.status', [OrderStatus::Cancelled->value])
+                ->whereDate('payments.created_at', $date)
+                ->select([
+                    DB::raw('SUM(CASE WHEN payments.status = "paid" THEN payments.amount_paid ELSE 0 END) as revenue'),
+                    DB::raw('SUM(CASE WHEN payments.status = "partial" THEN payments.amount_remaining ELSE 0 END) as pending_revenue'),
+                    DB::raw('COUNT(DISTINCT payments.order_id) as orders'),
+                ])
+                ->first();
 
             return [
                 'date'    => $date,
                 'label'   => now()->subDays($daysAgo)->format('d M'),
-                'revenue' => (float) $revenue,
-                'orders'  => $orders,
+                'revenue' => (float) ($orderData->revenue ?? 0),
+                'pending_revenue' => (float) ($orderData->pending_revenue ?? 0),
+                'orders'  => (int) ($orderData->orders ?? 0),
             ];
         });
 
@@ -103,23 +122,30 @@ class DashboardController extends Controller
 
     public function topMenus(): JsonResponse
     {
-        $menus = DB::table('order_items')
-            ->join('menus', 'order_items.menu_id', '=', 'menus.id')
-            ->join('orders', 'order_items.order_id', '=', 'orders.id')
-            ->where('orders.created_at', '>=', now()->subDays(30))
-            ->whereIn('orders.status', ['delivered', 'ready'])
-            ->select(
-                'menus.id',
-                'menus.name',
-                'menus.category',
-                DB::raw('SUM(order_items.qty) as total_qty'),
-                DB::raw('SUM(order_items.subtotal) as total_revenue'),
-                DB::raw('COUNT(DISTINCT order_items.order_id) as order_count')
+        // Gunakan status yang sama dengan report: 'delivered' dan 'ready'
+        $menus = OrderItem::whereBetween('created_at', [now()->subDays(30), now()])
+            ->whereHas('order', fn ($q) => $q->whereIn('status', [OrderStatus::Delivered->value, OrderStatus::Ready->value])
             )
-            ->groupBy('menus.id', 'menus.name', 'menus.category')
+            ->select([
+                'menu_id',
+                DB::raw('SUM(qty) as total_qty'),
+                DB::raw('SUM(subtotal) as total_revenue'),
+                DB::raw('COUNT(DISTINCT order_id) as order_count'),
+            ])
+            ->with('menu:id,name,category,price')
+            ->groupBy('menu_id')
             ->orderByDesc('total_qty')
             ->limit(8)
-            ->get();
+            ->get()
+            ->map(fn ($item) => [
+                'menu_id' => $item->menu_id,
+                'name' => $item->menu?->name ?? 'Menu dihapus',
+                'category' => $item->menu?->category ?? '-',
+                'price' => (float) ($item->menu?->price ?? 0),
+                'total_qty' => (int) $item->total_qty,
+                'total_revenue' => (float) $item->total_revenue,
+                'order_count' => (int) $item->order_count,
+            ]);
 
         return response()->json(['data' => $menus]);
     }
@@ -134,7 +160,7 @@ class DashboardController extends Controller
                 'id'           => $order->id,
                 'order_code'   => $order->order_code,
                 'customer'     => $order->customer?->user->name ?? 'Walk-in',
-                'order_type'   => $order->order_type->label(),
+                'order_type'   => $order->order_type->value, // Kirim enum value (dine_in, take_away, delivery)
                 'status'       => $order->status->value,
                 'status_label' => $order->status->label(),
                 'total'        => $order->formatted_total,

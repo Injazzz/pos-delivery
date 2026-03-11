@@ -28,7 +28,7 @@ class ReportController extends Controller
         [$from, $to] = $this->parseDateRange($request);
 
         $orders = Order::whereBetween('created_at', [$from, $to])
-            ->whereNotIn('status', [OrderStatus::Cancelled->value])
+            ->whereNotIn('status', [OrderStatus::Cancelled->value, OrderStatus::Pending->value])
             ->get();
 
         $payments = Payment::whereBetween('created_at', [$from, $to])
@@ -47,9 +47,9 @@ class ReportController extends Controller
 
         $prevRevenue = Payment::whereBetween('created_at', [$prevFrom, $prevTo])
             ->where('status', 'paid')
-            ->sum('amount');
+            ->sum('amount_paid');
 
-        $revenue = $payments->sum('amount');
+        $revenue = $payments->sum('amount_paid');
         $pendingRevenue = $partialPayments->sum('amount_remaining');
         $growthRevenue = $prevRevenue > 0
             ? round((($revenue - $prevRevenue) / $prevRevenue) * 100, 1)
@@ -65,7 +65,7 @@ class ReportController extends Controller
                 'orders_paid' => $payments->count(),
                 'orders_partial' => $partialPayments->count(),
                 'avg_order_value' => $orders->count() > 0
-                    ? round(($revenue + $pendingRevenue) / $orders->count(), 0)
+                    ? round($revenue / $orders->count(), 2)
                     : 0,
                 'orders_by_status' => $orders
                     ->groupBy('status')
@@ -103,7 +103,7 @@ class ReportController extends Controller
             ->whereNotIn('orders.status', [OrderStatus::Cancelled->value])
             ->select([
                 DB::raw("DATE_FORMAT(payments.created_at, '{$format}') as period"),
-                DB::raw('SUM(CASE WHEN payments.status = "paid" THEN payments.amount ELSE 0 END) as revenue'),
+                DB::raw('SUM(CASE WHEN payments.status = "paid" THEN payments.amount_paid ELSE 0 END) as revenue'),
                 DB::raw('COUNT(DISTINCT payments.order_id) as orders'),
                 DB::raw('SUM(CASE WHEN payments.status = "partial" THEN payments.amount_remaining ELSE 0 END) as pending_revenue'),
             ])
@@ -164,7 +164,7 @@ class ReportController extends Controller
         [$from, $to] = $this->parseDateRange($request);
 
         $rows = OrderItem::whereBetween('order_items.created_at', [$from, $to])
-            ->whereHas('order', fn ($q) => $q->whereNotIn('status', [OrderStatus::Cancelled->value])
+            ->whereHas('order', fn ($q) => $q->whereNotIn('status', [OrderStatus::Cancelled->value, OrderStatus::Pending->value])
             )
             ->join('menus', 'order_items.menu_id', '=', 'menus.id')
             ->select([
@@ -207,7 +207,7 @@ class ReportController extends Controller
             ->select([
                 'payments.method',
                 DB::raw('COUNT(*) as count'),
-                DB::raw('SUM(payments.amount) as total'),
+                DB::raw('SUM(payments.amount_paid) as total'),
             ])
             ->groupBy('payments.method')
             ->get();
@@ -265,6 +265,9 @@ class ReportController extends Controller
                 'customer' => $o->customer?->user->name ?? 'Walk-in',
                 'cashier' => $o->cashier?->name ?? '-',
                 'payment_method' => $o->payment?->method?->value ?? '-',
+                'payment_status' => $o->payment?->status ?? '-',
+                'amount_paid' => (float) ($o->payment?->amount_paid ?? 0),
+                'amount_remaining' => (float) ($o->payment?->amount_remaining ?? 0),
                 'created_at' => $o->created_at->toISOString(),
             ]);
 

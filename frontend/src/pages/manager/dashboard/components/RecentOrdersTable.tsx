@@ -9,11 +9,11 @@ import {
   ShoppingBag,
   User,
   Calendar,
-  UtensilsCrossed,
+  Store,
   Package,
   Bike,
-  Store,
   Coffee,
+  type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -21,6 +21,31 @@ interface Props {
   data?: RecentOrder[];
   isLoading: boolean;
 }
+
+// Mapping yang konsisten dengan OrderTable
+const TYPE_LABEL: Record<string, string> = {
+  dine_in: "Makan di Tempat",
+  take_away: "Bawa Pulang",
+  delivery: "Delivery",
+};
+
+const TYPE_ICON: Record<string, LucideIcon> = {
+  dine_in: Store,
+  take_away: Package,
+  delivery: Bike,
+};
+
+const TYPE_COLOR: Record<string, string> = {
+  dine_in: "text-earth-500",
+  take_away: "text-heart-500",
+  delivery: "text-glow-500",
+};
+
+const TYPE_BG: Record<string, string> = {
+  dine_in: "bg-earth-500/10",
+  take_away: "bg-heart-500/10",
+  delivery: "bg-glow-500/10",
+};
 
 export function RecentOrdersTable({ data, isLoading }: Props) {
   const navigate = useNavigate();
@@ -37,50 +62,27 @@ export function RecentOrdersTable({ data, isLoading }: Props) {
   //   }).format(numValue);
   // };
 
-  // Get order type icon and color using Lucide icons
+  // Get order type style yang konsisten dengan OrderTable
   const getOrderTypeStyle = (type: string) => {
-    switch (type?.toLowerCase()) {
-      case "dine in":
-      case "dine_in":
-      case "dine-in":
-        return {
-          icon: UtensilsCrossed,
-          bg: "bg-earth-100 dark:bg-earth-900/30",
-          text: "text-earth-700 dark:text-earth-400",
-          iconColor: "text-earth-600 dark:text-earth-400",
-        };
-      case "take away":
-      case "takeaway":
-      case "take_away":
-        return {
-          icon: Package,
-          bg: "bg-heart-100 dark:bg-heart-900/30",
-          text: "text-heart-700 dark:text-heart-400",
-          iconColor: "text-heart-600 dark:text-heart-400",
-        };
-      case "delivery":
-      case "deliver":
-        return {
-          icon: Bike,
-          bg: "bg-glow-100 dark:bg-glow-900/30",
-          text: "text-glow-700 dark:text-glow-400",
-          iconColor: "text-glow-600 dark:text-glow-400",
-        };
-      case "pickup":
-        return {
-          icon: Store,
-          bg: "bg-emerald-100 dark:bg-emerald-900/30",
-          text: "text-emerald-700 dark:text-emerald-400",
-          iconColor: "text-emerald-600 dark:text-emerald-400",
-        };
-      default:
-        return {
-          icon: Coffee,
-          bg: "bg-gray-100 dark:bg-gray-800",
-          text: "text-gray-700 dark:text-gray-400",
-          iconColor: "text-gray-600 dark:text-gray-400",
-        };
+    // Debug: log order type dari backend
+    // console.log("RecentOrdersTable - order_type received:", type);
+
+    const iconConfig = TYPE_ICON[type];
+    const bgConfig = TYPE_BG[type];
+    const colorConfig = TYPE_COLOR[type];
+    const labelConfig = TYPE_LABEL[type];
+
+    if (!iconConfig) {
+      console.warn(`RecentOrdersTable - order_type tidak dikenali: ${type}`);
     }
+
+    return {
+      icon: iconConfig || Coffee,
+      bg: bgConfig || "bg-muted",
+      text: colorConfig || "text-muted-foreground",
+      iconColor: colorConfig || "text-muted-foreground",
+      label: labelConfig || type,
+    };
   };
 
   return (
@@ -142,7 +144,7 @@ export function RecentOrdersTable({ data, isLoading }: Props) {
                     animationDelay: `${index * 50}ms`,
                   }}
                 >
-                  {/* Order Type Icon with Lucide React */}
+                  {/* Order Type Icon dengan warna konsisten */}
                   <div
                     className={cn(
                       "w-10 h-10 rounded-lg flex items-center justify-center shrink-0",
@@ -160,12 +162,12 @@ export function RecentOrdersTable({ data, isLoading }: Props) {
                       </p>
                       <span
                         className={cn(
-                          "text-[10px] px-1.5 py-0.5 rounded-full font-medium",
+                          "text-[10px] px-1.5 py-0.5 rounded-full font-medium border",
                           orderTypeStyle.bg,
                           orderTypeStyle.text,
                         )}
                       >
-                        {order.order_type}
+                        {orderTypeStyle.label}
                       </span>
                     </div>
 
@@ -183,11 +185,11 @@ export function RecentOrdersTable({ data, isLoading }: Props) {
                     </div>
                   </div>
 
-                  {/* Status */}
+                  {/* Status & Total */}
                   <div className="flex items-center gap-2 shrink-0">
                     <div className="text-right">
                       <OrderStatusBadge status={order.status as OrderStatus} />
-                      {/* <p className="text-sm font-bold text-earth-600 dark:text-earth-400">
+                      {/* <p className="text-sm font-bold text-heart-500 dark:text-heart-400 mt-1">
                         {formatCurrency(order.total)}
                       </p> */}
                     </div>

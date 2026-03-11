@@ -48,10 +48,10 @@ export function CartSummary({
 
   if (items.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center h-full gap-3 text-slate-500 py-12">
+      <div className="flex flex-col items-center justify-center h-full gap-3 text-gray-500 dark:text-gray-400 py-12">
         <ShoppingCart className="w-10 h-10" />
         <p className="text-sm">Keranjang kosong</p>
-        <p className="text-xs text-center">
+        <p className="text-xs text-center text-gray-400 dark:text-gray-500">
           Pilih menu dari daftar di sebelah kiri
         </p>
       </div>
@@ -62,7 +62,7 @@ export function CartSummary({
     <div className="flex flex-col h-full">
       {/* Order type selector */}
       <div className="mb-3 space-y-1.5">
-        <label className="text-xs font-semibold text-slate-300">
+        <label className="text-xs font-semibold text-gray-600 dark:text-gray-400">
           Tipe Pesanan
         </label>
         <div className="flex gap-2">
@@ -74,8 +74,8 @@ export function CartSummary({
               onClick={() => onOrderTypeChange(type)}
               className={`text-xs flex-1 ${
                 orderType === type
-                  ? "bg-amber-500 text-slate-950 hover:bg-amber-400"
-                  : "bg-slate-700 text-slate-300 hover:bg-slate-600 border-slate-600"
+                  ? "bg-glow-500 hover:bg-glow-400 text-gray-950 border-0"
+                  : "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700"
               }`}
             >
               {type === "dine_in"
@@ -91,7 +91,7 @@ export function CartSummary({
       {/* Conditional fields based on order type */}
       {orderType === "dine_in" && (
         <div className="mb-3">
-          <label className="text-xs font-semibold text-slate-300 block mb-1.5">
+          <label className="text-xs font-semibold text-gray-600 dark:text-gray-400 block mb-1.5">
             Nomor Meja *
           </label>
           <input
@@ -100,7 +100,7 @@ export function CartSummary({
             onChange={(e) => onTableNumberChange(e.target.value)}
             placeholder="Contoh: A1, T5"
             disabled={isSubmitting}
-            className="w-full bg-slate-800 border border-slate-700 rounded px-2 py-1.5 text-xs text-slate-300 placeholder:text-slate-600 focus:outline-none focus:ring-1 focus:ring-amber-500 disabled:opacity-50"
+            className="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded px-2 py-1.5 text-xs text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:ring-1 focus:ring-glow-500 disabled:opacity-50"
           />
         </div>
       )}
@@ -108,7 +108,7 @@ export function CartSummary({
       {orderType === "delivery" && (
         <div className="mb-3 space-y-1.5">
           <div>
-            <label className="text-xs font-semibold text-slate-300 block mb-1.5">
+            <label className="text-xs font-semibold text-gray-600 dark:text-gray-400 block mb-1.5">
               Alamat Pengiriman *
             </label>
             <textarea
@@ -117,11 +117,11 @@ export function CartSummary({
               placeholder="Alamat lengkap pengiriman..."
               disabled={isSubmitting}
               rows={2}
-              className="w-full bg-slate-800 border border-slate-700 rounded px-2 py-1.5 text-xs text-slate-300 placeholder:text-slate-600 focus:outline-none focus:ring-1 focus:ring-amber-500 disabled:opacity-50 resize-none"
+              className="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded px-2 py-1.5 text-xs text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:ring-1 focus:ring-glow-500 disabled:opacity-50 resize-none"
             />
           </div>
           <div>
-            <label className="text-xs font-semibold text-slate-300 block mb-1.5">
+            <label className="text-xs font-semibold text-gray-600 dark:text-gray-400 block mb-1.5">
               Kota
             </label>
             <input
@@ -130,11 +130,11 @@ export function CartSummary({
               onChange={(e) => onDeliveryCityChange(e.target.value)}
               placeholder="Contoh: Jakarta, Bandung"
               disabled={isSubmitting}
-              className="w-full bg-slate-800 border border-slate-700 rounded px-2 py-1.5 text-xs text-slate-300 placeholder:text-slate-600 focus:outline-none focus:ring-1 focus:ring-amber-500 disabled:opacity-50"
+              className="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded px-2 py-1.5 text-xs text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:ring-1 focus:ring-glow-500 disabled:opacity-50"
             />
           </div>
           <div>
-            <label className="text-xs font-semibold text-slate-300 block mb-1.5">
+            <label className="text-xs font-semibold text-gray-600 dark:text-gray-400 block mb-1.5">
               Catatan Pengiriman
             </label>
             <input
@@ -143,7 +143,7 @@ export function CartSummary({
               onChange={(e) => onDeliveryNotesChange(e.target.value)}
               placeholder="Contoh: Depan pintu, hub ke nomor..."
               disabled={isSubmitting}
-              className="w-full bg-slate-800 border border-slate-700 rounded px-2 py-1.5 text-xs text-slate-300 placeholder:text-slate-600 focus:outline-none focus:ring-1 focus:ring-amber-500 disabled:opacity-50"
+              className="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded px-2 py-1.5 text-xs text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:ring-1 focus:ring-glow-500 disabled:opacity-50"
             />
           </div>
         </div>
@@ -154,32 +154,32 @@ export function CartSummary({
         {items.map((item) => (
           <div
             key={item.menu.id}
-            className="bg-slate-800 rounded-lg p-3 space-y-2"
+            className="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-lg p-3 space-y-2 shadow-sm hover:shadow-md transition-shadow"
           >
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0">
-                <p className="text-sm font-medium text-white truncate">
+                <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
                   {item.menu.name}
                 </p>
-                <p className="text-xs text-amber-400">
+                <p className="text-xs text-glow-600 dark:text-glow-400">
                   Rp {(item.menu.price * item.qty).toLocaleString("id-ID")}
                 </p>
               </div>
               <div className="flex items-center gap-1.5 shrink-0">
                 <Button
                   size="icon"
-                  className="w-6 h-6 bg-slate-700 hover:bg-slate-600 text-white"
+                  className="w-6 h-6 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300"
                   onClick={() => updateQty(item.menu.id, item.qty - 1)}
                   disabled={isSubmitting}
                 >
                   <Minus className="w-3 h-3" />
                 </Button>
-                <span className="text-sm font-bold text-white w-5 text-center">
+                <span className="text-sm font-bold text-gray-900 dark:text-white w-5 text-center">
                   {item.qty}
                 </span>
                 <Button
                   size="icon"
-                  className="w-6 h-6 bg-amber-500 hover:bg-amber-400 text-slate-950"
+                  className="w-6 h-6 bg-heart-500 hover:bg-heart-400 text-white"
                   onClick={() => updateQty(item.menu.id, item.qty + 1)}
                   disabled={isSubmitting}
                 >
@@ -188,7 +188,7 @@ export function CartSummary({
                 <Button
                   size="icon"
                   variant="ghost"
-                  className="w-6 h-6 text-slate-500 hover:text-red-400 hover:bg-transparent"
+                  className="w-6 h-6 text-gray-400 hover:text-heart-500 dark:hover:text-heart-400 hover:bg-transparent"
                   onClick={() => removeItem(item.menu.id)}
                   disabled={isSubmitting}
                 >
@@ -204,7 +204,7 @@ export function CartSummary({
               onChange={(e) => updateNote(item.menu.id, e.target.value)}
               placeholder="Catatan (opsional)..."
               disabled={isSubmitting}
-              className="w-full bg-slate-700 border-0 rounded px-2 py-1 text-xs text-slate-300 placeholder:text-slate-600 focus:outline-none focus:ring-1 focus:ring-amber-500 disabled:opacity-50"
+              className="w-full bg-gray-50 dark:bg-gray-700 border border-gray-100 dark:border-gray-600 rounded px-2 py-1 text-xs text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:ring-1 focus:ring-glow-500 disabled:opacity-50"
             />
           </div>
         ))}
@@ -218,24 +218,24 @@ export function CartSummary({
           placeholder="Catatan untuk pesanan..."
           rows={2}
           disabled={isSubmitting}
-          className="bg-slate-800 border-slate-700 text-white placeholder:text-slate-500 text-xs resize-none disabled:opacity-50"
+          className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 text-xs resize-none focus:ring-glow-500 disabled:opacity-50"
         />
       </div>
 
       {/* Price summary */}
-      <div className="bg-slate-800 rounded-lg p-3 space-y-1.5 text-sm mb-3">
-        <div className="flex justify-between text-slate-400">
+      <div className="bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-lg p-3 space-y-1.5 text-sm mb-3">
+        <div className="flex justify-between text-gray-600 dark:text-gray-400">
           <span>Subtotal</span>
           <span>Rp {sub.toLocaleString("id-ID")}</span>
         </div>
-        <div className="flex justify-between text-slate-400">
+        <div className="flex justify-between text-gray-600 dark:text-gray-400">
           <span>Pajak 11%</span>
           <span>Rp {Math.round(tax).toLocaleString("id-ID")}</span>
         </div>
-        <Separator className="bg-slate-700" />
+        <Separator className="bg-gray-200 dark:bg-gray-700" />
         <div className="flex justify-between font-bold">
-          <span className="text-white">Total</span>
-          <span className="text-amber-400">
+          <span className="text-gray-900 dark:text-white">Total</span>
+          <span className="text-glow-600 dark:text-glow-400">
             Rp {Math.round(total).toLocaleString("id-ID")}
           </span>
         </div>
@@ -245,7 +245,7 @@ export function CartSummary({
       <Button
         onClick={onSubmit}
         disabled={items.length === 0 || isSubmitting}
-        className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+        className="w-full bg-heart-500 hover:bg-heart-600 text-white font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
       >
         {isSubmitting
           ? "Memproses..."

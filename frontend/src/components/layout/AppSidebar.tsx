@@ -177,7 +177,7 @@ function NavUser() {
               >
                 <div className="relative overflow-visible">
                   <Avatar className="h-8 w-8 rounded-lg shrink-0">
-                    <AvatarFallback className="bg-primary/20 text-primary text-xs">
+                    <AvatarFallback className="bg-secondary/50 text-secondary-foreground">
                       {user?.name?.slice(0, 2).toUpperCase() ?? "U"}
                     </AvatarFallback>
                   </Avatar>
